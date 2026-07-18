@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" role="img" aria-labelledby="title desc">
+  <title id="title">Hao Sun Avatar</title>
+  <desc id="desc">Stylized avatar with initials HS</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#b04f3d" />
+      <stop offset="100%" stop-color="#dd896f" />
+    </linearGradient>
+  </defs>
+  <rect width="200" height="200" rx="100" fill="url(#bg)" />
+  <circle cx="100" cy="82" r="36" fill="#fff3ee" />
+  <path d="M36 170c10-32 34-48 64-48s54 16 64 48" fill="#fff3ee" />
+  <text x="100" y="188" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#7d3528">HS</text>
+</svg>

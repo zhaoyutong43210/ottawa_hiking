@@ -1,0 +1,82 @@
+{
+  "activities": [
+    {
+      "id": "hist-wolftrail-2026-05",
+      "type": "walking",
+      "date": "2026-05-18",
+      "difficulty": "hard",
+      "distanceKm": 14.2,
+      "elevationGainM": 620,
+      "participants": 15,
+      "locationZh": "Wolf Trail 长环线",
+      "locationEn": "Wolf Trail Extended Loop",
+      "titleZh": "狼径高强度训练营",
+      "titleEn": "Wolf Trail Intensive Camp",
+      "summaryZh": "春末强度线，重点训练爬升与下撤节奏。",
+      "summaryEn": "A high-intensity spring route focused on climbing and descent rhythm.",
+      "detailZh": [
+        "集合后完成装备抽检与天气窗口确认，分为快慢两组出发。",
+        "中段设置补给点并进行队列压缩，避免体能断层。",
+        "全程无事故，复盘建议加强登山杖使用训练与下坡脚踝保护。"
+      ],
+      "detailEn": [
+        "After gear check and weather-window confirmation, the team started in two pacing groups.",
+        "A mid-route supply checkpoint was used to compress the formation and control pace gaps.",
+        "No incidents occurred; post-event review emphasized trekking-pole use and downhill ankle protection."
+      ],
+      "gpxFile": "walk-wolftrail-2026-05.gpx"
+    },
+    {
+      "id": "hist-cycle-canal-2026-06",
+      "type": "cycling",
+      "date": "2026-06-15",
+      "difficulty": "easy",
+      "distanceKm": 21.5,
+      "elevationGainM": 85,
+      "participants": 22,
+      "locationZh": "Rideau 运河与 Arboretum 环线",
+      "locationEn": "Rideau Canal & Arboretum Loop",
+      "titleZh": "运河风景骑行回顾",
+      "titleEn": "Canal Scenic Ride Recap",
+      "summaryZh": "节奏友好的城市环线，重点验证新成员编队纪律。",
+      "summaryEn": "A beginner-friendly city loop used to validate new-member riding discipline.",
+      "detailZh": [
+        "分三段补水与车况检查，确保新成员能稳定跟骑。",
+        "通过路口采取前后哨策略，显著减少停车等待。",
+        "活动后统计显示平均巡航速度较上一期提升 9%。"
+      ],
+      "detailEn": [
+        "Hydration and bike checks were conducted in three stages for stable group riding.",
+        "Front-and-rear marshal control at intersections reduced stop-and-wait time.",
+        "Post-event metrics showed a 9% improvement in average cruising speed."
+      ],
+      "gpxFile": "cycle-canal-2026-06.gpx"
+    },
+    {
+      "id": "hist-paddle-ottawa-2025-09",
+      "type": "paddling",
+      "date": "2025-09-03",
+      "difficulty": "moderate",
+      "distanceKm": 10.6,
+      "elevationGainM": 18,
+      "participants": 14,
+      "locationZh": "渥太华河 Britannia 到 Deschenes 段",
+      "locationEn": "Ottawa River Britannia to Deschenes Segment",
+      "titleZh": "秋季编队划行训练",
+      "titleEn": "Autumn Formation Paddling Session",
+      "summaryZh": "中等水流条件下的队形控制与通信演练。",
+      "summaryEn": "Formation and communication drills under moderate current conditions.",
+      "detailZh": [
+        "以双人船与单人船混编，统一口令与避让信号。",
+        "在逆流段安排轮换领划，验证体能分配策略。",
+        "整体配合平稳，后续建议补充夜间反光与防寒清单。"
+      ],
+      "detailEn": [
+        "Mixed tandem and solo craft used unified command and avoidance signals.",
+        "Lead rotation in upstream sections tested endurance distribution strategy.",
+        "Coordination was stable; follow-up recommended stronger night-visibility and cold-weather checklists."
+      ],
+      "gpxFile": "paddle-ottawa-2026-07.gpx"
+    }
+  ]
+}

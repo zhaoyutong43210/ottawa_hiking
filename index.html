@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="keywords" content="渥太华, 华人大群, 徒步, 划船, 骑行, GPX, 活动报名" />
+  <meta name="description" content="渥太华华人徒步群活动主页：活动上架、类型筛选、GPX轨迹、海拔剖面与报名。" />
+  <title>渥太华华人徒步群 | 主页</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@raruto/leaflet-elevation@2.5.1/dist/leaflet-elevation.min.css" />
+  <link rel="stylesheet" href="css/activities.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="index.html">渥太华华人徒步群 Ottawa Chinese Hiking Club</a>
+      <nav class="nav-links" aria-label="Primary Navigation">
+        <a href="index.html">主页</a>
+        <a href="history.html">历史活动</a>
+        <a href="disclaimer.html">免责声明</a>
+      </nav>
+      <div class="lang-switch" aria-label="Language switch">
+        <button type="button" class="lang-btn active" data-lang="zh">中文</button>
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1 id="heroTitle">渥太华华人徒步群 | 活动主页</h1>
+    <p id="heroDesc">像选购产品一样浏览活动：可按类型、月份、历史/未来筛选，查看轨迹、海拔和难度，再完成报名。</p>
+    <div class="chips">
+      <span id="chip1" class="chip"> 以走会友 </span>
+      <span id="chip2" class="chip"> 道法自然 </span>
+      <span id="chip3" class="chip"> 放松身心 </span>
+      <span id="chip4" class="chip"> 返璞归真 </span>
+    </div>
+  </section>
+
+  <main class="main-grid">
+    <section id="clubIntro" class="panel info-panel">
+      <h2 id="clubTitle">俱乐部介绍</h2>
+      <p id="clubDesc1"> 渥太华华人徒步群是一个面向华人社区的户外活动俱乐部，徒步群的活动并不局限于徒步。同时也有划船、骑行等活动，强调安全、协作和长期体能建设。</p>
+      <p id="clubDesc1"> 渥太华徒步群创立于2024年10月10日，群主酷爱户外活动, 喜欢组织各类户外活动。在从蒙特利尔搬来渥太华后组建了一个面向加东华人的徒步群。</p>
+      <p id="clubDesc2"> 我们通过领队分工、路线分级、出发前风险简报和活动后复盘来提升活动质量。欢迎不同经验水平成员参与，选择适合自己的活动强度。</p>
+      <ul class="info-list">
+        <li id="clubBullet1">组织结构：发起人、活动领队、安全协助、后勤与新人成员支持。</li>
+        <li id="clubBullet2">活动原则：尊重自然、团队互助、守时守约、风险透明。</li>
+        <li id="clubBullet3">参与要求：具备基础自我照护能力，服从现场安全安排与天气调整。</li>
+      </ul>
+    </section>
+
+    <section id="joinClub" class="panel join-panel" aria-label="How to join the club">
+      <h2 id="joinTitle">如何加入俱乐部</h2>
+      <p id="joinIntro">欢迎新成员加入。你可以先阅读活动与免责声明，再通过微信联系管理员完成入群与审核。</p>
+      <ol class="join-steps">
+        <li id="joinStep1"> 阅读主页中的活动说明与免责声明，确认你能遵守安全与团队规则。 </li>
+        <li id="joinStep2"> 扫码添加任一管理员微信，备注“渥太华徒步群 + 姓名”。 </li>
+        <li id="joinStep3"> 通过简单审核后入群，按活动强度选择合适线路参与。 </li>
+      </ol>
+      <p id="joinCondition"> 谁可以加入：渥太华及周边地区的使用中文的朋友，包括蒙特利尔和金士顿的华人，热爱户外活动，愿意遵守俱乐部规则的个人。</p>
+      <div class="qr-grid">
+        <div class="qr-slot">
+          <div id="qrPlaceholder1" class="qr-placeholder">微信二维码位置 1</div>
+          <p id="qrCaption1" class="qr-caption">管理员 A（新成员咨询）</p>
+        </div>
+        <div class="qr-slot">
+          <div id="qrPlaceholder2" class="qr-placeholder">微信二维码位置 2</div>
+          <p id="qrCaption2" class="qr-caption">管理员 B（活动报名咨询）</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="legalDisclaimer" class="panel disclaimer-panel" role="note" aria-label="Legal disclaimer">
+      <h2 id="disclaimerTitle">免责声明与风险告知</h2>
+      <p id="disclaimerLead">本俱乐部为公益性非营利组织。户外活动存在固有风险，参与人需自行评估健康与技能条件，并自备必要装备与保险。</p>
+      <p id="disclaimerShort">在法律允许的最大范围内，参与人同意自行承担活动风险，并同意详细责任条款以完整版免责声明为准。</p>
+      <p class="disclaimer-note">
+        <a id="fullDisclaimerLink" class="disclaimer-link" href="disclaimer.html">查看完整版免责声明</a>
+      </p>
+      <!-- <label class="waiver-check" for="globalWaiverAck">
+        <input type="checkbox" id="globalWaiverAck" />
+        <span id="globalWaiverText">我已阅读简短版，并同意完整版免责声明条款。</span>
+      </label> -->
+    </section>
+
+    <section id="filters" class="panel filter-panel">
+      <div class="filter-grid">
+        <div class="filter-group">
+          <label id="labelType" for="typeFilter">活动类型</label>
+          <select id="typeFilter">
+            <option value="all">全部</option>
+            <option value="walking">徒步 Walking</option>
+            <option value="paddling">划船 Paddling</option>
+            <option value="cycling">骑行 Cycling</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label id="labelTime" for="timeFilter">时间维度</label>
+          <select id="timeFilter">
+            <option value="all">全部</option>
+            <option value="future">未来活动</option>
+            <option value="past">历史活动</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label id="labelMonth" for="monthFilter">活动月份</label>
+          <select id="monthFilter">
+            <option value="all">全部</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label id="labelSeats" for="seatFilter">席位状态</label>
+          <select id="seatFilter">
+            <option value="all">全部</option>
+            <option value="available">有剩余席位</option>
+            <option value="full">已满</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-actions" style="margin-top: 10px;">
+        <button id="applyFilterBtn" class="btn-brand" type="button">应用筛选</button>
+        <button id="resetFilterBtn" class="btn-ghost" type="button">重置</button>
+      </div>
+      <div id="resultStats" class="stats">筛选结果：0 个活动</div>
+    </section>
+
+    <section class="content-grid">
+      <section id="catalog" class="panel" style="padding: 12px;">
+        <div class="cards-wrap" id="activityCards"></div>
+      </section>
+
+      <section id="mapSection" class="panel map-panel">
+        <h2 id="mapTitle" style="margin: 4px 0 10px;">轨迹地图与海拔</h2>
+        <div id="activityMap" aria-label="Activity route map"></div>
+        <div id="elevationChart" aria-label="Elevation profile chart"></div>
+        <div class="legend">
+          <span class="legend-item"><span class="swatch easy"></span><span id="legendEasy">简单</span></span>
+          <span class="legend-item"><span class="swatch moderate"></span><span id="legendModerate">中等</span></span>
+          <span class="legend-item"><span class="swatch hard"></span><span id="legendHard">困难</span></span>
+        </div>
+      </section>
+    </section>
+
+    <section id="teamShowcase" class="panel team-panel" aria-label="Team showcase">
+      <h2 id="teamTitle">团队风采</h2>
+      <p id="teamIntro">以下是俱乐部六位关键人物，分别负责组织运营、安全、训练、路线和社区协作。</p>
+      <div class="team-grid">
+        <article class="team-card">
+          <img class="team-avatar" src="files/avatars/lin-zhao.svg" alt="Lin Zhao avatar" loading="lazy" />
+          <h3 id="member1Name">赵林</h3>
+          <p id="member1Role" class="team-role">发起人 / 总协调</p>
+          <p id="member1Bio" class="team-bio">统筹全年活动计划与外部合作，负责跨季节路线策略和团队标准制定。</p>
+        </article>
+        <article class="team-card">
+          <img class="team-avatar" src="files/avatars/yu-chen.svg" alt="Yu Chen avatar" loading="lazy" />
+          <h3 id="member2Name">陈雨</h3>
+          <p id="member2Role" class="team-role">安全官</p>
+          <p id="member2Bio" class="team-bio">负责风险评估、天气窗口判断、出发前安全简报与应急流程维护。</p>
+        </article>
+        <article class="team-card">
+          <img class="team-avatar" src="files/avatars/lei-wang.svg" alt="Lei Wang avatar" loading="lazy" />
+          <h3 id="member3Name">王磊</h3>
+          <p id="member3Role" class="team-role">徒步领队</p>
+          <p id="member3Bio" class="team-bio">擅长山脊线与林线穿越活动，负责徒步分级路线设计与节奏控制。</p>
+        </article>
+        <article class="team-card">
+          <img class="team-avatar" src="files/avatars/min-liu.svg" alt="Min Liu avatar" loading="lazy" />
+          <h3 id="member4Name">刘敏</h3>
+          <p id="member4Role" class="team-role">划船领队</p>
+          <p id="member4Bio" class="team-bio">负责水域活动编队训练、通信口令规范和逆流段技术指导。</p>
+        </article>
+        <article class="team-card">
+          <img class="team-avatar" src="files/avatars/hao-sun.svg" alt="Hao Sun avatar" loading="lazy" />
+          <h3 id="member5Name">孙浩</h3>
+          <p id="member5Role" class="team-role">骑行教练</p>
+          <p id="member5Bio" class="team-bio">负责骑行线路踏勘、队列纪律训练和新人骑行技术提升。</p>
+        </article>
+        <article class="team-card">
+          <img class="team-avatar" src="files/avatars/jia-li.svg" alt="Jia Li avatar" loading="lazy" />
+          <h3 id="member6Name">李佳</h3>
+          <p id="member6Role" class="team-role">社区与后勤</p>
+          <p id="member6Bio" class="team-bio">负责新成员接待、活动摄影记录、补给协调与社群沟通支持。</p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="signupDialog" class="signup-dialog">
+    <div class="signup-header">
+      <strong id="signupTitle">报名</strong>
+      <button id="closeSignupBtn" type="button" aria-label="Close">X</button>
+    </div>
+    <form id="signupForm" class="signup-body">
+      <input id="signupActivityId" name="activityId" type="hidden" />
+
+      <div>
+        <label for="signupName">姓名 Name</label>
+        <input id="signupName" name="name" type="text" required />
+      </div>
+
+      <div>
+        <label for="signupContact">联系方式 Contact</label>
+        <input id="signupContact" name="contact" type="text" required />
+      </div>
+
+      <div>
+        <label for="signupNote">备注 Note</label>
+        <textarea id="signupNote" name="note" rows="3"></textarea>
+      </div>
+
+      <label class="waiver-check" for="signupWaiverAck">
+        <input id="signupWaiverAck" name="waiverAck" type="checkbox" required />
+        <span id="signupWaiverText">我已阅读并同意完整版免责声明条款。</span>
+      </label>
+
+      <div class="signup-actions">
+        <button id="cancelSignupBtn" type="button" class="btn-ghost">取消 Cancel</button>
+        <button type="submit" class="btn-brand">提交 Submit</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-gpx@2.1.2/gpx.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@raruto/leaflet-elevation@2.5.1/dist/leaflet-elevation.min.js"></script>
+  <script src="js/activities.js"></script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="keywords" content="渥太华华人徒步群, 历史活动, GPX, 户外回顾" />
+  <meta name="description" content="渥太华华人徒步群历史活动页面：商品式条目、下拉细节、GPX轨迹与海拔可视化。" />
+  <title>渥太华华人徒步群 | 历史活动</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@raruto/leaflet-elevation@2.5.1/dist/leaflet-elevation.min.css" />
+  <link rel="stylesheet" href="css/history.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="index.html">渥太华华人徒步群 Ottawa OCC</a>
+      <nav class="nav-links" aria-label="Primary Navigation">
+        <a href="index.html">主页</a>
+        <a href="history.html">历史活动</a>
+        <a href="disclaimer.html">免责声明</a>
+      </nav>
+      <div class="lang-switch" aria-label="Language switch">
+        <button type="button" class="lang-btn active" data-lang="zh">中文</button>
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1 id="heroTitle">历史活动档案</h1>
+    <p id="heroDesc">每一项活动按商品条目展示，可下拉查看细节，并在地图中联动显示 GPX 轨迹和海拔剖面。</p>
+  </section>
+
+  <main class="layout">
+    <section id="historyList" class="panel catalog-panel">
+      <div class="catalog-head">
+        <h2 id="catalogTitle">活动条目</h2>
+        <p id="catalogStats" class="catalog-stats"></p>
+      </div>
+      <div class="filter-bar" aria-label="History filters">
+        <div class="filter-item">
+          <label id="filterTypeLabel" for="historyTypeFilter">活动类型</label>
+          <select id="historyTypeFilter">
+            <option value="all">全部</option>
+            <option value="walking">徒步 Walking</option>
+            <option value="paddling">划船 Paddling</option>
+            <option value="cycling">骑行 Cycling</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label id="filterYearLabel" for="historyYearFilter">年份</label>
+          <select id="historyYearFilter">
+            <option value="all">全部</option>
+          </select>
+        </div>
+        <div class="filter-actions">
+          <button id="historyApplyBtn" class="primary" type="button">应用筛选</button>
+          <button id="historyResetBtn" type="button">重置</button>
+        </div>
+      </div>
+      <div class="expand-actions">
+        <button id="expandAllBtn" type="button">展开全部细节</button>
+        <button id="collapseAllBtn" type="button">收起全部细节</button>
+      </div>
+      <div id="historyCards" class="history-cards"></div>
+    </section>
+
+    <section id="historyMapWrap" class="panel map-panel">
+      <h2 id="mapTitle">GPX 轨迹可视化</h2>
+      <div id="historyMap" aria-label="History route map"></div>
+      <div id="historyElevation" aria-label="History elevation profile"></div>
+      <div class="legend">
+        <span class="legend-item"><span class="swatch easy"></span><span id="legendEasy">简单</span></span>
+        <span class="legend-item"><span class="swatch moderate"></span><span id="legendModerate">中等</span></span>
+        <span class="legend-item"><span class="swatch hard"></span><span id="legendHard">困难</span></span>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet-gpx@2.1.2/gpx.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@raruto/leaflet-elevation@2.5.1/dist/leaflet-elevation.min.js"></script>
+  <script src="js/history.js"></script>
+</body>
+</html>

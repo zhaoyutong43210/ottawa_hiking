@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Ottawa Chinese Outdoor Club" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Late Summer Ridge Hike</name>
+  </metadata>
+  <trk>
+    <name>Gatineau Ridge</name>
+    <trkseg>
+      <trkpt lat="45.5189" lon="-75.9004"><ele>245</ele></trkpt>
+      <trkpt lat="45.5228" lon="-75.8863"><ele>271</ele></trkpt>
+      <trkpt lat="45.5258" lon="-75.8702"><ele>298</ele></trkpt>
+      <trkpt lat="45.5216" lon="-75.8557"><ele>322</ele></trkpt>
+      <trkpt lat="45.5152" lon="-75.8421"><ele>337</ele></trkpt>
+      <trkpt lat="45.5073" lon="-75.8298"><ele>358</ele></trkpt>
+      <trkpt lat="45.4994" lon="-75.8181"><ele>346</ele></trkpt>
+      <trkpt lat="45.5057" lon="-75.8337"><ele>315</ele></trkpt>
+      <trkpt lat="45.5131" lon="-75.8486"><ele>281</ele></trkpt>
+      <trkpt lat="45.5189" lon="-75.9004"><ele>245</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>

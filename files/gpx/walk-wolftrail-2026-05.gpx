@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Ottawa Chinese Outdoor Club" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata>
+    <name>Wolf Trail Intensive Camp</name>
+  </metadata>
+  <trk>
+    <name>Wolf Extended Loop</name>
+    <trkseg>
+      <trkpt lat="45.5754" lon="-75.9586"><ele>190</ele></trkpt>
+      <trkpt lat="45.5801" lon="-75.9468"><ele>224</ele></trkpt>
+      <trkpt lat="45.5839" lon="-75.9352"><ele>252</ele></trkpt>
+      <trkpt lat="45.5860" lon="-75.9249"><ele>286</ele></trkpt>
+      <trkpt lat="45.5882" lon="-75.9157"><ele>324</ele></trkpt>
+      <trkpt lat="45.5850" lon="-75.9089"><ele>354</ele></trkpt>
+      <trkpt lat="45.5798" lon="-75.9161"><ele>335</ele></trkpt>
+      <trkpt lat="45.5758" lon="-75.9276"><ele>302</ele></trkpt>
+      <trkpt lat="45.5731" lon="-75.9414"><ele>258</ele></trkpt>
+      <trkpt lat="45.5754" lon="-75.9586"><ele>190</ele></trkpt>
+    </trkseg>
+  </trk>
+</gpx>
