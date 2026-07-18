@@ -172,7 +172,7 @@ body {
 
 .qr-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -473,7 +473,10 @@ body {
   border-radius: 50%;
   border: 2px solid rgba(31, 53, 41, 0.12);
   margin-bottom: 8px;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: center;
+  background: #f3f6f4;
+  padding: 2px;
 }
 
 .team-card h3 {
@@ -722,7 +725,7 @@ dialog.signup-dialog {
   }
 
   .qr-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   #activityMap {

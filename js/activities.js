@@ -174,6 +174,8 @@
     );
     setTextIfExists("qrCaption1", "群主 赵宇彤", "Group Owner: Yutong Zhao");
     setTextIfExists("qrCaption2", "副群主 廖岩", "Deputy Group Owner: Liao Yan");
+    setTextIfExists("qrPlaceholder3", "微信二维码位置 3", "WeChat QR Slot 3");
+    setTextIfExists("qrCaption3", "渥太华徒步群2群", "Ottawa Hiking Group 2");
 
     setTextIfExists("disclaimerTitle", "免责声明与风险告知", "Legal Disclaimer And Risk Notice");
     setTextIfExists(
