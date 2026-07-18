@@ -94,7 +94,7 @@
     setTextIfExists("heroTitle", "渥太华华人徒步群 | 主页", "Ottawa Chinese Hiking Club | Home");
     setTextIfExists(
       "heroDesc",
-      "像选购产品一样浏览活动：可按类型、月份、历史/未来筛选，查看轨迹、海拔和难度，再完成报名。",
+      "渥太华徒步群官方网站 ",
       "Browse activities like products: filter by type, month, and timeline, then review route, elevation, and difficulty before signup."
     );
     setTextIfExists("chip1", "以走会友", "Walk, Connect, Belong");
@@ -488,8 +488,13 @@
         for (var i = 0; i < points.length; i++) {
           var lat = parseFloat(points[i].getAttribute("lat"));
           var lon = parseFloat(points[i].getAttribute("lon"));
+          var eleNode = points[i].getElementsByTagNameNS("*", "ele")[0] || points[i].getElementsByTagName("ele")[0];
+          var ele = eleNode ? parseFloat(eleNode.textContent) : 0;
+          if (!isFinite(ele)) {
+            ele = 0;
+          }
           if (!isNaN(lat) && !isNaN(lon)) {
-            latlngs.push([lat, lon]);
+            latlngs.push(L.latLng(lat, lon, ele));
           }
         }
         if (!latlngs.length) {
@@ -540,7 +545,46 @@
       return;
     }
 
+    sanitizeGeoJSONElevation(geo);
+
     state.elevationControl.addData(geo);
+  }
+
+  function sanitizeGeoJSONElevation(geo) {
+    function visit(coords) {
+      if (!Array.isArray(coords) || !coords.length) {
+        return;
+      }
+
+      if (typeof coords[0] === "number" && typeof coords[1] === "number") {
+        if (!isFinite(coords[2])) {
+          coords[2] = 0;
+        }
+        return;
+      }
+
+      for (var i = 0; i < coords.length; i++) {
+        visit(coords[i]);
+      }
+    }
+
+    if (geo.type === "FeatureCollection" && Array.isArray(geo.features)) {
+      geo.features.forEach(function (f) {
+        if (f && f.geometry && f.geometry.coordinates) {
+          visit(f.geometry.coordinates);
+        }
+      });
+      return;
+    }
+
+    if (geo.type === "Feature" && geo.geometry && geo.geometry.coordinates) {
+      visit(geo.geometry.coordinates);
+      return;
+    }
+
+    if (geo.coordinates) {
+      visit(geo.coordinates);
+    }
   }
 
   function highlightRoute(activityId, keepMap) {

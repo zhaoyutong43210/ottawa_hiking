@@ -57,8 +57,8 @@
   function updateStaticText() {
     document.getElementById("heroTitle").textContent = t("历史活动档案", "Historical Activity Archive");
     document.getElementById("heroDesc").textContent = t(
-      "每一项活动按商品条目展示，可下拉查看细节，并在地图中联动显示 GPX 轨迹和海拔剖面。",
-      "Each activity is presented like a product item with expandable details and linked GPX route/elevation visualization."
+      "该页面还在建设中。",
+      "This page is under construction."
     );
     document.getElementById("catalogTitle").textContent = t("活动条目", "Activity Items");
     document.getElementById("filterTypeLabel").textContent = t("活动类型", "Activity Type");
