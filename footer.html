@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Shared Footer</title>
+</head>
+<body>
+  <footer class="site-footer" aria-label="Site footer">
+    <div class="footer-inner">
+      <nav class="footer-links" aria-label="Footer navigation">
+        <a href="index.html">主页</a>
+        <a href="history.html">历史活动</a>
+        <a href="disclaimer.html">免责声明</a>
+        <a href="business.html">商业合作</a>
+        <a href="public-account.html">公众号</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+      <p class="footer-copyright">Copyright © 2026 Ottawa Chinese Hiking Club. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var page = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+      var links = document.querySelectorAll(".site-footer .footer-links a");
+
+      links.forEach(function (link) {
+        var href = (link.getAttribute("href") || "").split("?")[0].split("#")[0].toLowerCase();
+        var isActive = href === page;
+        link.classList.toggle("active", isActive);
+        if (isActive) {
+          link.setAttribute("aria-current", "page");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

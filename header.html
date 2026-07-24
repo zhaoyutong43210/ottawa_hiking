@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>Shared Header</title>
+</head>
+<body>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2067GGFPFK"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag("js", new Date());
+    gtag("config", "G-2067GGFPFK");
+  </script>
+
+  <style>
+    .site-header .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .site-header .brand-logo {
+      width: 34px;
+      height: 34px;
+      display: block;
+      object-fit: contain;
+      flex: 0 0 auto;
+    }
+  </style>
+
+  <header class="site-header">
+    <div class="nav-wrap">
+      <a class="brand" href="index.html">
+        <img class="brand-logo" src="files/avatars/logo_vector.svg" alt="Ottawa Chinese Hiking Club logo" loading="lazy" />
+        <span class="brand-text">渥太华华人徒步群 Ottawa Chinese Hiking Club</span>
+      </a>
+      <nav class="nav-links" aria-label="Primary Navigation">
+        <a href="index.html">主页</a>
+        <a href="history.html">历史活动</a>
+        <a href="disclaimer.html">免责声明</a>
+        <a href="business.html">商业合作</a>
+        <a href="public-account.html">公众号</a>
+        <a href="faq.html">FAQ</a>
+      </nav>
+      <div class="lang-switch" aria-label="Language switch">
+        <button type="button" class="lang-btn active" data-lang="zh">中文</button>
+        <button type="button" class="lang-btn" data-lang="en">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <script>
+    (function () {
+      var page = (window.location.pathname.split("/").pop() || "index.html").toLowerCase();
+      var links = document.querySelectorAll(".site-header .nav-links a");
+
+      links.forEach(function (link) {
+        var href = (link.getAttribute("href") || "").split("?")[0].split("#")[0].toLowerCase();
+        var isActive = href === page;
+        link.classList.toggle("active", isActive);
+        if (isActive) {
+          link.setAttribute("aria-current", "page");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+    })();
+  </script>
+</body>
+</html>

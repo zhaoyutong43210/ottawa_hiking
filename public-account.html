@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+	<meta charset="UTF-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<meta name="keywords" content="加拿大的心跳, 微信公众号, 文章, 渥太华华人徒步群" />
+	<meta name="description" content="微信公众号“加拿大的心跳”介绍页：扫码关注与精选文章目录。" />
+	<title>渥太华华人徒步群 | 公众号</title>
+
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=ZCOOL+XiaoWei&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="css/public-account.css" />
+</head>
+<body>
+	<script src="js/header-loader.js"></script>
+
+	<main class="container">
+		<section class="hero panel">
+			<h1 id="heroTitle">微信公众号：加拿大的心跳</h1>
+			<p id="heroDesc">这里记录在加拿大的生活观察、户外体验和社群故事。欢迎关注，和我们一起看见日常里的心跳。</p>
+		</section>
+
+		<section class="panel intro-panel" aria-label="Public account introduction">
+			<div class="intro-copy">
+				<h2 id="channelTitle">关注渠道</h2>
+				<p id="channelDesc">点击二维码可查看大图，使用微信扫码关注公众号“加拿大的心跳”。</p>
+				<p id="channelHint" class="channel-hint">如果你是第一次来到本站，建议先阅读下方精选文章，再结合活动页面了解我们的社群文化。</p>
+			</div>
+			<a class="channel-qr" href="files/qr_codes/CHB_public.png" target="_blank" rel="noopener noreferrer" aria-label="打开公众号二维码大图">
+				<img src="files/qr_codes/CHB_public.png" alt="加拿大的心跳公众号二维码" loading="lazy" />
+			</a>
+		</section>
+
+		<section class="panel article-panel" aria-label="Featured article list">
+			<div class="article-head">
+				<h2 id="articleTitle">精选文章目录</h2>
+				<p id="articleDesc">以下为公众号近期重点内容，方便新朋友快速了解主题方向。</p>
+			</div>
+			<div id="articleGrid" class="article-grid"></div>
+		</section>
+	</main>
+
+	<script src="js/footer-loader.js"></script>
+
+	<script src="js/public-account.js"></script>
+</body>
+</html>
