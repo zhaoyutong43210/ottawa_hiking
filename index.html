@@ -15,33 +15,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@raruto/leaflet-elevation@2.5.1/dist/leaflet-elevation.min.css" />
   <link rel="stylesheet" href="css/activities.css" />
-
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2067GGFPFK"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-2067GGFPFK');
-  </script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="nav-wrap">
-      <a class="brand" href="index.html">渥太华华人徒步群 Ottawa Chinese Hiking Club</a>
-      <nav class="nav-links" aria-label="Primary Navigation">
-        <a href="index.html">主页</a>
-        <a href="history.html">历史活动</a>
-        <a href="disclaimer.html">免责声明</a>
-        <a href="business.html">商业合作</a>
-      </nav>
-      <div class="lang-switch" aria-label="Language switch">
-        <button type="button" class="lang-btn active" data-lang="zh">中文</button>
-        <button type="button" class="lang-btn" data-lang="en">EN</button>
-      </div>
-    </div>
-  </header>
+  <script src="js/header-loader.js"></script>
 
   <section class="hero">
     <h1 id="heroTitle">渥太华华人徒步群 | 主页</h1>
@@ -54,11 +30,11 @@
     </div>
   </section>
 
-  <main class="main-grid">
+  <main id="homeMain" class="main-grid">
     <section id="clubIntro" class="panel info-panel">
       <h2 id="clubTitle">俱乐部介绍</h2>
       <p id="clubDesc1"> 渥太华华人徒步群是一个面向华人社区的户外活动俱乐部，徒步群的活动并不局限于徒步。而是以徒步为主。同时也有划船、骑行等活动，强调安全、协作和长期体能建设。</p>
-      <p id="clubDesc1"> 渥太华徒步群创立于2024年10月10日，群主酷爱户外活动, 喜欢组织各类户外活动。在从蒙特利尔搬来渥太华后组建了一个面向加东华人的徒步群。承蒙当地朋友厚爱，500人的群满了一次又一次。之后我们又组建了一个容量为2000人的大群。</p>
+      <p id="clubDesc1Extra"> 渥太华徒步群创立于2024年10月10日，群主酷爱户外活动, 喜欢组织各类户外活动。在从蒙特利尔搬来渥太华后组建了一个面向加东华人的徒步群。承蒙当地朋友厚爱，500人的群满了一次又一次。之后我们又组建了一个容量为2000人的大群。</p>
       <p id="clubDesc2"> 我们通过领队分工、路线分级、出发前风险简报和活动后复盘来提升活动质量。欢迎不同经验水平成员参与，选择适合自己的活动强度。</p>
       <ul class="info-list">
         <li id="clubBullet1"> 组织结构：我群为松散组织，欢迎任何成员组织活动。 但是领队一定要谨慎评估风险，确保活动安全。 </li>
@@ -121,7 +97,7 @@
       <section id="catalog" class="panel" style="padding: 12px;">
         <div class="catalog-headline">
           <h2 id="featuredTitle">近期未来活动</h2>
-          <p id="resultStats" class="stats">展示未来活动中最近的 2-3 条</p>
+          <p id="resultStats" class="stats">展示全部未来活动</p>
         </div>
         <div class="cards-wrap" id="activityCards"></div>
       </section>
@@ -136,6 +112,29 @@
           <span class="legend-item"><span class="swatch hard"></span><span id="legendHard">困难</span></span>
         </div>
       </section>
+    </section>
+
+    <section id="publicAccountFeature" class="panel public-account-panel" aria-label="WeChat public account">
+      <div class="public-account-copy">
+        <h2 id="publicAccountTitle">微信公众号：加拿大的心跳</h2>
+        <p id="publicAccountIntro">记录在加拿大生活、户外和社群观察，分享真实体验与实用信息，欢迎扫码关注。</p>
+        <p id="publicAccountTip" class="public-account-tip">可点击二维码查看大图后扫码，或进入专题页查看文章目录。</p>
+        <a id="publicAccountBtn" class="public-account-btn" href="public-account.html">查看公众号文章</a>
+      </div>
+      <a class="public-account-qr" href="files/qr_codes/CHB_public.png" target="_blank" rel="noopener noreferrer" aria-label="打开公众号二维码大图">
+        <img src="files/qr_codes/CHB_public.png" alt="加拿大的心跳公众号二维码" loading="lazy" />
+      </a>
+    </section>
+
+    <section id="faqPreview" class="panel faq-preview-panel" aria-label="FAQ preview">
+      <h2 id="faqPreviewTitle">常见问题 FAQ</h2>
+      <p id="faqPreviewIntro">新朋友常问的问题：如何入群、活动强度怎么选、需要准备哪些装备、报名后如何沟通。</p>
+      <ul class="faq-preview-list">
+        <li id="faqPreviewQ1">如何判断自己适合哪类活动？</li>
+        <li id="faqPreviewQ2">报名后多久会收到集合信息？</li>
+        <li id="faqPreviewQ3">下雨或天气突变时怎么处理？</li>
+      </ul>
+      <a id="faqPreviewBtn" class="faq-preview-btn" href="faq.html">查看完整 FAQ</a>
     </section>
 
     <section id="teamShowcase" class="panel team-panel" aria-label="Team showcase">
@@ -203,8 +202,8 @@
       </div>
 
       <div>
-        <label for="signupContact">联系方式 Contact</label>
-        <input id="signupContact" name="contact" type="text" required />
+        <label for="signupWechat">微信账号 WeChat ID</label>
+        <input id="signupWechat" name="wechat" type="text" required />
       </div>
 
       <div>
@@ -226,17 +225,7 @@
 
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <footer class="site-footer" aria-label="Site footer">
-    <div class="footer-inner">
-      <nav class="footer-links" aria-label="Footer navigation">
-        <a href="index.html" class="active" aria-current="page">主页</a>
-        <a href="history.html">历史活动</a>
-        <a href="disclaimer.html">免责声明</a>
-        <a href="business.html">商业合作</a>
-      </nav>
-      <p class="footer-copyright">Copyright © 2026 Ottawa Chinese Hiking Club. All rights reserved.</p>
-    </div>
-  </footer>
+  <script src="js/footer-loader.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-gpx@2.1.2/gpx.js"></script>

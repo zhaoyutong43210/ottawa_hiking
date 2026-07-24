@@ -53,29 +53,21 @@
       "gpxFile": "cycle-canal-2026-06.gpx"
     },
     {
-      "id": "hist-paddle-ottawa-2025-09",
+      "id": "paddle-ottawa-2026-07",
       "type": "paddling",
-      "date": "2025-09-03",
-      "difficulty": "moderate",
-      "distanceKm": 10.6,
-      "elevationGainM": 18,
-      "participants": 14,
-      "locationZh": "渥太华河 Britannia 到 Deschenes 段",
-      "locationEn": "Ottawa River Britannia to Deschenes Segment",
-      "titleZh": "秋季编队划行训练",
-      "titleEn": "Autumn Formation Paddling Session",
-      "summaryZh": "中等水流条件下的队形控制与通信演练。",
-      "summaryEn": "Formation and communication drills under moderate current conditions.",
-      "detailZh": [
-        "以双人船与单人船混编，统一口令与避让信号。",
-        "在逆流段安排轮换领划，验证体能分配策略。",
-        "整体配合平稳，后续建议补充夜间反光与防寒清单。"
-      ],
-      "detailEn": [
-        "Mixed tandem and solo craft used unified command and avoidance signals.",
-        "Lead rotation in upstream sections tested endurance distribution strategy.",
-        "Coordination was stable; follow-up recommended stronger night-visibility and cold-weather checklists."
-      ],
+      "status": "future",
+      "date": "2026-07-20",
+      "difficulty": "easy",
+      "capacity": 4,
+      "seatsLeft": 2,
+      "distanceKm": 8.1,
+      "elevationGainM": 22,
+      "locationZh": "渥太华河 Shirleys Bay--Aylmer Island 段",
+      "locationEn": "Ottawa River Shirleys Bay Segment",
+      "titleZh": "渥太华河日落沙滩桨板局",
+      "titleEn": "Sunset Paddle on Ottawa River",
+      "summaryZh": "5:30pm集合，稳定水域轻松路线，电动桨板支持适合新手。",
+      "summaryEn": "A calm-water route suitable for first-time paddlers.",
       "gpxFile": "paddle-ottawa-2026-07.gpx"
     }
   ]

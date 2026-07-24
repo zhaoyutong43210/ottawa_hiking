@@ -7,6 +7,7 @@
     filtered: [],
     map: null,
     routeLayers: {},
+    pointLayers: {},
     loadingRoutes: {},
     markersLayer: null,
     activeId: null,
@@ -41,6 +42,7 @@
     signupTitle: document.getElementById("signupTitle"),
     signupForm: document.getElementById("signupForm"),
     signupActivityId: document.getElementById("signupActivityId"),
+    signupWechat: document.getElementById("signupWechat"),
     globalWaiverAck: document.getElementById("globalWaiverAck"),
     signupWaiverAck: document.getElementById("signupWaiverAck"),
     closeSignupBtn: document.getElementById("closeSignupBtn"),
@@ -113,6 +115,12 @@
     });
     document.querySelectorAll(".nav-links a[href='business.html'], .footer-links a[href='business.html']").forEach(function (el) {
       el.textContent = t("商业合作", "Business Partners");
+    });
+    document.querySelectorAll(".nav-links a[href='public-account.html'], .footer-links a[href='public-account.html']").forEach(function (el) {
+      el.textContent = t("公众号", "Public Account");
+    });
+    document.querySelectorAll(".nav-links a[href='faq.html'], .footer-links a[href='faq.html']").forEach(function (el) {
+      el.textContent = t("FAQ", "FAQ");
     });
 
     setTextIfExists("clubTitle", "俱乐部介绍", "About The Club");
@@ -216,6 +224,30 @@
       "以下是徒步群六位关键人物，维持群内的活动持续进行。",
       "Here are six key members who keep the club running and activities continuously moving."
     );
+
+    setTextIfExists("publicAccountTitle", "微信公众号：加拿大的心跳", "WeChat Public Account: Heartbeat of Canada");
+    setTextIfExists(
+      "publicAccountIntro",
+      "记录在加拿大生活、户外和社群观察，分享真实体验与实用信息，欢迎扫码关注。",
+      "Sharing real stories from life in Canada, outdoor adventures, and community observations with practical insights."
+    );
+    setTextIfExists(
+      "publicAccountTip",
+      "可点击二维码查看大图后扫码，或进入专题页查看文章目录。",
+      "Click the QR image for a larger view to scan, or open the dedicated page to browse article highlights."
+    );
+    setTextIfExists("publicAccountBtn", "查看公众号文章", "Browse Featured Articles");
+
+    setTextIfExists("faqPreviewTitle", "常见问题 FAQ", "Frequently Asked Questions");
+    setTextIfExists(
+      "faqPreviewIntro",
+      "新朋友常问的问题：如何入群、活动强度怎么选、需要准备哪些装备、报名后如何沟通。",
+      "Quick answers for new members: how to join, how to choose activity intensity, what gear to prepare, and how communication works after signup."
+    );
+    setTextIfExists("faqPreviewQ1", "如何判断自己适合哪类活动？", "How do I choose the right activity level?");
+    setTextIfExists("faqPreviewQ2", "报名后多久会收到集合信息？", "How soon do I receive meetup details after signup?");
+    setTextIfExists("faqPreviewQ3", "下雨或天气突变时怎么处理？", "What happens if weather changes suddenly?");
+    setTextIfExists("faqPreviewBtn", "查看完整 FAQ", "Read Full FAQ");
 
     setTextIfExists("member1Name", "赵宇彤", "Yutong Zhao");
     setTextIfExists("member1Role", "发起人 / 群主", "Founder / Group Owner");
@@ -321,8 +353,7 @@
       })
       .sort(function (a, b) {
         return new Date(a.date + "T00:00:00") - new Date(b.date + "T00:00:00");
-      })
-      .slice(0, 3);
+      });
 
     renderCards(state.filtered);
     refreshMapLayers();
@@ -330,6 +361,7 @@
 
   function typeText(type) {
     if (type === "walking") { return t("徒步", "Walking"); }
+    if (type === "hiking") { return t("徒步", "Hiking"); }
     if (type === "paddling") { return t("划船", "Paddling"); }
     if (type === "cycling") { return t("骑行", "Cycling"); }
     return type;
@@ -353,12 +385,14 @@
       return;
     }
 
-    ui.stats.textContent = t("当前展示：", "Currently showing: ") + items.length + t(" 个未来活动（最多 3 个）", " upcoming activities (max 3)");
+    ui.stats.textContent = t("当前展示：", "Currently showing: ") + items.length + t(" 个未来活动", " upcoming activities");
 
     ui.cardsWrap.innerHTML = items.map(function (a) {
       var title = state.lang === "zh" ? a.titleZh : a.titleEn;
       var summary = state.lang === "zh" ? a.summaryZh : a.summaryEn;
       var location = state.lang === "zh" ? a.locationZh : a.locationEn;
+      var hasPoint = !!getActivityCoordinate(a);
+      var hasTrack = !!a.gpxFile;
       var seatsText = a.seatsLeft > 0
         ? t("剩余席位", "Seats Left") + ": " + a.seatsLeft + "/" + a.capacity
         : t("席位已满", "Full") + " (" + a.capacity + ")";
@@ -380,14 +414,14 @@
         + "</div>"
         + "<div class=\"card-meta\">"
         + "<div>" + seatsText + "</div>"
-        + "<div>" + t("轨迹", "Route") + ": " + (a.gpxFile ? t("可查看", "Available") : t("整理中", "Pending")) + "</div>"
+        + "<div>" + t("轨迹/坐标", "Route/Point") + ": " + (hasTrack ? t("GPX 可查看", "GPX Available") : (hasPoint ? t("坐标点可查看", "Point Available") : t("整理中", "Pending"))) + "</div>"
         + "</div>"
         + "<div class=\"card-actions\">"
         + "<button class=\"primary\" data-action=\"signup\" data-id=\"" + a.id + "\">" + t("报名", "Sign Up") + "</button>"
-        + "<button data-action=\"focus\" data-id=\"" + a.id + "\">" + t("查看轨迹", "Focus Route") + "</button>"
-        + (a.gpxFile
+        + "<button data-action=\"focus\" data-id=\"" + a.id + "\">" + t("查看地图", "Focus Map") + "</button>"
+        + (hasTrack
             ? "<a href=\"files/gpx/" + a.gpxFile + "\" download>" + t("下载 GPX", "Download GPX") + "</a>"
-            : "<a href=\"#\" aria-disabled=\"true\">" + t("轨迹整理中", "Route Pending") + "</a>")
+          : "<a href=\"#\" aria-disabled=\"true\">" + (hasPoint ? t("坐标点活动", "Point Activity") : t("轨迹整理中", "Route Pending")) + "</a>")
         + "</div>"
         + "</article>";
     }).join("");
@@ -441,6 +475,12 @@
       state.map.removeLayer(state.routeLayers[k]);
     });
     state.routeLayers = {};
+
+    Object.keys(state.pointLayers).forEach(function (k) {
+      state.map.removeLayer(state.pointLayers[k]);
+    });
+    state.pointLayers = {};
+
     state.markersLayer.clearLayers();
     if (state.elevationControl && state.elevationControl.clear) {
       state.elevationControl.clear();
@@ -455,11 +495,82 @@
     clearRouteLayers();
 
     state.filtered.forEach(function (a) {
-      if (!a.gpxFile) {
+      if (a.gpxFile) {
+        loadRoute(a, false);
         return;
       }
-      loadRoute(a, false);
+      loadPoint(a);
     });
+  }
+
+  function getActivityCoordinate(activity) {
+    if (!activity) {
+      return null;
+    }
+
+    var lat = null;
+    var lng = null;
+
+    if (activity.coordinate && typeof activity.coordinate === "object") {
+      lat = activity.coordinate.lat;
+      lng = activity.coordinate.lng;
+      if (lng == null) {
+        lng = activity.coordinate.lon;
+      }
+    }
+
+    if (lat == null) {
+      lat = activity.lat;
+    }
+    if (lat == null) {
+      lat = activity.latitude;
+    }
+    if (lng == null) {
+      lng = activity.lng;
+    }
+    if (lng == null) {
+      lng = activity.lon;
+    }
+    if (lng == null) {
+      lng = activity.longitude;
+    }
+
+    lat = parseFloat(lat);
+    lng = parseFloat(lng);
+    if (!isFinite(lat) || !isFinite(lng)) {
+      return null;
+    }
+
+    return { lat: lat, lng: lng };
+  }
+
+  function loadPoint(activity) {
+    var coord = getActivityCoordinate(activity);
+    if (!coord || state.pointLayers[activity.id]) {
+      return;
+    }
+
+    var style = difficultyStyles[activity.difficulty] || difficultyStyles.moderate;
+    var pointLayer = L.circleMarker([coord.lat, coord.lng], {
+      radius: 7,
+      color: style.color,
+      weight: 3,
+      fillColor: style.color,
+      fillOpacity: 0.85
+    }).addTo(state.map);
+
+    state.pointLayers[activity.id] = pointLayer;
+
+    L.marker([coord.lat, coord.lng], {
+      title: state.lang === "zh" ? activity.titleZh : activity.titleEn
+    })
+      .bindPopup((state.lang === "zh" ? activity.titleZh : activity.titleEn) + "<br/>" + t("坐标点活动", "Point Activity"))
+      .addTo(state.markersLayer);
+
+    if (state.pendingFocusId === activity.id) {
+      highlightRoute(activity.id, false);
+      state.pendingFocusId = null;
+    }
   }
 
   function loadRoute(activity, centerWhenLoaded) {
@@ -602,23 +713,55 @@
       layer.setStyle(baseStyle);
     });
 
+    Object.keys(state.pointLayers).forEach(function (id) {
+      var pointLayer = state.pointLayers[id];
+      var pointActivity = state.activities.find(function (a) { return a.id === id; });
+      if (!pointActivity || !pointLayer || !pointLayer.setStyle) {
+        return;
+      }
+      var pointBaseStyle = difficultyStyles[pointActivity.difficulty] || difficultyStyles.moderate;
+      pointLayer.setStyle({
+        color: pointBaseStyle.color,
+        weight: 3,
+        fillColor: pointBaseStyle.color,
+        fillOpacity: 0.85
+      });
+      if (pointLayer.setRadius) {
+        pointLayer.setRadius(7);
+      }
+    });
+
     var target = state.routeLayers[activityId];
-    if (!target || !target.setStyle) {
+    var pointTarget = state.pointLayers[activityId];
+
+    if (target && target.setStyle) {
+      target.setStyle({ color: "#5b1d12", weight: 7, opacity: 1 });
+      if (!keepMap) {
+        state.map.fitBounds(target.getBounds().pad(0.25));
+      }
+      updateElevationWithLayer(target);
+    } else if (pointTarget) {
+      pointTarget.setStyle({ color: "#5b1d12", weight: 4, fillColor: "#5b1d12", fillOpacity: 0.95 });
+      if (pointTarget.setRadius) {
+        pointTarget.setRadius(9);
+      }
+      if (!keepMap && pointTarget.getLatLng) {
+        state.map.setView(pointTarget.getLatLng(), Math.max(state.map.getZoom(), 13));
+      }
+      if (state.elevationControl && state.elevationControl.clear) {
+        state.elevationControl.clear();
+      }
+    } else {
       var selected = state.activities.find(function (a) { return a.id === activityId; });
       if (selected && selected.gpxFile) {
         showToast(t("轨迹加载中，请稍候再试。", "Route is loading, please try again in a moment."));
+      } else if (selected && getActivityCoordinate(selected)) {
+        showToast(t("坐标点加载中，请稍候再试。", "Point is loading, please try again in a moment."));
       } else {
-        showToast(t("该活动暂无 GPX 轨迹。", "No GPX route for this activity."));
+        showToast(t("该活动暂无轨迹或坐标信息。", "No route or coordinate is available for this activity."));
       }
       return;
     }
-
-    target.setStyle({ color: "#5b1d12", weight: 7, opacity: 1 });
-    if (!keepMap) {
-      state.map.fitBounds(target.getBounds().pad(0.25));
-    }
-
-    updateElevationWithLayer(target);
 
     document.querySelectorAll(".activity-card").forEach(function (card) {
       card.classList.toggle("highlight", card.getAttribute("data-id") === activityId);
@@ -627,8 +770,14 @@
 
   function focusActivity(activityId) {
     var activity = state.activities.find(function (item) { return item.id === activityId; });
-    if (!activity || !activity.gpxFile) {
-      showToast(t("该活动暂无 GPX 轨迹。", "No GPX route for this activity."));
+    if (!activity) {
+      return;
+    }
+
+    var hasGpx = !!activity.gpxFile;
+    var hasPoint = !!getActivityCoordinate(activity);
+    if (!hasGpx && !hasPoint) {
+      showToast(t("该活动暂无轨迹或坐标信息。", "No route or coordinate is available for this activity."));
       return;
     }
 
@@ -639,7 +788,19 @@
       return;
     }
 
-    loadRoute(activity, true);
+    if (state.pointLayers[activityId]) {
+      highlightRoute(activityId, false);
+      state.pendingFocusId = null;
+      return;
+    }
+
+    if (hasGpx) {
+      loadRoute(activity, true);
+    } else {
+      loadPoint(activity);
+      highlightRoute(activityId, false);
+      state.pendingFocusId = null;
+    }
   }
 
   function openSignup(activityId) {
@@ -680,13 +841,68 @@
     if (!formData.get("name").trim()) {
       return t("请填写姓名。", "Please enter your name.");
     }
-    if (!formData.get("contact").trim()) {
-      return t("请填写联系方式。", "Please enter your contact.");
+    if (!formData.get("wechat").trim()) {
+      return t("请填写微信账号。", "Please enter your WeChat ID.");
     }
     if (!formData.get("waiverAck")) {
       return t("请先同意完整版免责声明条款。", "Please agree to the full disclaimer terms.");
     }
     return "";
+  }
+
+  function buildSignupPayload(formData) {
+    var activityId = formData.get("activityId");
+    var activity = state.activities.find(function (item) { return item.id === activityId; });
+    var activityTitle = activity
+      ? (state.lang === "zh" ? activity.titleZh : activity.titleEn)
+      : activityId;
+
+    return {
+      activityId: activityId,
+      activityTitle: activityTitle,
+      name: formData.get("name").trim(),
+      wechat: formData.get("wechat").trim(),
+      note: (formData.get("note") || "").trim(),
+      lang: state.lang,
+      submittedAt: new Date().toISOString()
+    };
+  }
+
+  function getSignupErrorMessage(code) {
+    if (code === "mail_not_configured") {
+      return t("后台邮件配置缺失，请联系管理员。", "Mail service is not configured. Please contact admin.");
+    }
+    if (code === "missing_required_fields" || code === "invalid_payload") {
+      return t("报名信息不完整，请检查后重试。", "Signup data is incomplete. Please check and retry.");
+    }
+    if (code === "smtp_failed") {
+      return t("邮件发送失败，请稍后重试。", "Email sending failed. Please try again later.");
+    }
+    return t("提交失败，请稍后再试。", "Submission failed. Please try again later.");
+  }
+
+  function submitSignup(payload) {
+    var formPayload = new URLSearchParams();
+    Object.keys(payload).forEach(function (key) {
+      formPayload.append(key, payload[key]);
+    });
+
+    return fetch("api/signup.ashx", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+      },
+      body: formPayload.toString()
+    }).then(function (resp) {
+      return resp.json().catch(function () {
+        return { ok: false, code: "invalid_response" };
+      }).then(function (data) {
+        return {
+          ok: resp.ok && data.ok,
+          code: data.code || ""
+        };
+      });
+    });
   }
 
   function showToast(text) {
@@ -710,17 +926,30 @@
         return;
       }
 
-      // Frontend placeholder: keep payload available for future API integration.
-      var payload = {
-        activityId: formData.get("activityId"),
-        name: formData.get("name"),
-        contact: formData.get("contact"),
-        note: formData.get("note")
-      };
-      console.log("Signup payload", payload);
+      var submitBtn = ui.signupForm.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+      }
 
-      showToast(t("报名信息已记录（演示版）。", "Signup recorded (demo mode)."));
-      closeSignup();
+      var payload = buildSignupPayload(formData);
+      submitSignup(payload)
+        .then(function (result) {
+          if (!result.ok) {
+            showToast(getSignupErrorMessage(result.code));
+            return;
+          }
+
+          showToast(t("报名提交成功，我们会通过邮件处理您的信息。", "Signup submitted successfully. We will process it by email."));
+          closeSignup();
+        })
+        .catch(function () {
+          showToast(t("网络异常，提交失败，请稍后重试。", "Network error. Submission failed, please retry."));
+        })
+        .finally(function () {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+          }
+        });
     });
   }
 

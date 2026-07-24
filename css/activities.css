@@ -440,6 +440,103 @@ body {
   padding: 12px;
 }
 
+.public-account-panel {
+  padding: 32px;
+  display: block;
+}
+
+.public-account-copy {
+  max-width: 860px;
+}
+
+.public-account-copy h2 {
+  margin: 0 0 8px;
+}
+
+.public-account-copy p {
+  margin: 0 0 10px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.public-account-tip {
+  margin-bottom: 12px;
+  font-size: 0.92rem;
+}
+
+.public-account-btn {
+  display: inline-block;
+  margin-top: 4px;
+  text-decoration: none;
+  color: #fff;
+  background: var(--brand);
+  border: 1px solid var(--brand);
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+
+.public-account-btn:hover {
+  background: var(--brand-strong);
+  border-color: var(--brand-strong);
+}
+
+.public-account-qr {
+  display: block;
+  margin-top: 10px;
+  width: 50vw;
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  padding: 6px;
+}
+
+.public-account-qr img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}
+
+.faq-preview-panel {
+  padding: 16px;
+}
+
+.faq-preview-panel h2 {
+  margin: 0 0 8px;
+}
+
+.faq-preview-panel > p {
+  margin: 0 0 10px;
+  color: var(--muted);
+}
+
+.faq-preview-list {
+  margin: 0 0 12px;
+  padding-left: 20px;
+}
+
+.faq-preview-list li {
+  margin-bottom: 7px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+
+.faq-preview-btn {
+  display: inline-block;
+  text-decoration: none;
+  color: #fff;
+  background: var(--brand);
+  border: 1px solid var(--brand);
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+
+.faq-preview-btn:hover {
+  background: var(--brand-strong);
+  border-color: var(--brand-strong);
+}
+
 .team-panel {
   padding: 16px;
 }
@@ -694,6 +791,10 @@ dialog.signup-dialog {
 
   .team-grid {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .public-account-panel {
+    grid-template-columns: 1fr;
   }
 
   .friendly-org-grid {

@@ -15,33 +15,9 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@raruto/leaflet-elevation@2.5.1/dist/leaflet-elevation.min.css" />
   <link rel="stylesheet" href="css/history.css" />
-
-  <!-- Google tag (gtag.js) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-2067GGFPFK"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-
-    gtag('config', 'G-2067GGFPFK');
-  </script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="nav-wrap">
-      <a class="brand" href="index.html">渥太华华人徒步群 Ottawa OCC</a>
-      <nav class="nav-links" aria-label="Primary Navigation">
-        <a href="index.html">主页</a>
-        <a href="history.html">历史活动</a>
-        <a href="disclaimer.html">免责声明</a>
-        <a href="business.html">商业合作</a>
-      </nav>
-      <div class="lang-switch" aria-label="Language switch">
-        <button type="button" class="lang-btn active" data-lang="zh">中文</button>
-        <button type="button" class="lang-btn" data-lang="en">EN</button>
-      </div>
-    </div>
-  </header>
+  <script src="js/header-loader.js"></script>
 
   <section class="hero">
     <h1 id="heroTitle">历史活动档案</h1>
@@ -96,17 +72,7 @@
 
   <div id="toast" class="toast" aria-live="polite"></div>
 
-  <footer class="site-footer" aria-label="Site footer">
-    <div class="footer-inner">
-      <nav class="footer-links" aria-label="Footer navigation">
-        <a href="index.html">主页</a>
-        <a href="history.html" class="active" aria-current="page">历史活动</a>
-        <a href="disclaimer.html">免责声明</a>
-        <a href="business.html">商业合作</a>
-      </nav>
-      <p class="footer-copyright">Copyright © 2026 Ottawa Chinese Hiking Club. All rights reserved.</p>
-    </div>
-  </footer>
+  <script src="js/footer-loader.js"></script>
 
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/leaflet-gpx@2.1.2/gpx.js"></script>
