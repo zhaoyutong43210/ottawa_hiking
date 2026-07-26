@@ -328,8 +328,355 @@
     }).join("");
   }
 
-  function loadActivities() {
-    return fetch("files/activities.json")
+  function getActivitiesSheetCsvUrl() {
+    var meta = document.querySelector('meta[name="activities-sheet-csv-url"]');
+    if (!meta) {
+      return "";
+    }
+    return (meta.getAttribute("content") || "").trim();
+  }
+
+  function getSignupWebAppUrl() {
+    var meta = document.querySelector('meta[name="signup-webapp-url"]');
+    if (!meta) {
+      return "";
+    }
+    return (meta.getAttribute("content") || "").trim();
+  }
+
+  function parseSheetUrlInfo(rawUrl) {
+    var input = String(rawUrl || "").trim();
+    if (!input) {
+      return null;
+    }
+
+    var idMatch = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (!idMatch) {
+      return {
+        jsonUrl: input,
+        csvUrl: input
+      };
+    }
+
+    var sheetId = idMatch[1];
+    var gid = "";
+    var sheetName = "";
+
+    try {
+      var parsed = new URL(input);
+      gid = parsed.searchParams.get("gid") || "";
+      sheetName = parsed.searchParams.get("sheet") || "";
+      if (!gid && parsed.hash) {
+        var hashMatch = parsed.hash.match(/gid=(\d+)/);
+        gid = hashMatch ? hashMatch[1] : "";
+      }
+    } catch (e) {
+      gid = "";
+      sheetName = "";
+    }
+
+    var queryParts = ["tqx=out:json"];
+    var csvQueryParts = ["tqx=out:csv"];
+    if (gid) {
+      queryParts.push("gid=" + encodeURIComponent(gid));
+      csvQueryParts.push("gid=" + encodeURIComponent(gid));
+    }
+    if (sheetName) {
+      queryParts.push("sheet=" + encodeURIComponent(sheetName));
+      csvQueryParts.push("sheet=" + encodeURIComponent(sheetName));
+    }
+
+    return {
+      jsonUrl: "https://docs.google.com/spreadsheets/d/" + sheetId + "/gviz/tq?" + queryParts.join("&"),
+      csvUrl: "https://docs.google.com/spreadsheets/d/" + sheetId + "/gviz/tq?" + csvQueryParts.join("&")
+    };
+  }
+
+  function parseGoogleVisualizationJson(responseText) {
+    var text = String(responseText || "").trim();
+    var match = text.match(/google\.visualization\.Query\.setResponse\((.*)\);?$/s);
+    if (!match || !match[1]) {
+      throw new Error("Invalid Google gviz response");
+    }
+
+    var payload = JSON.parse(match[1]);
+    var table = payload && payload.table;
+    if (!table || !Array.isArray(table.cols) || !Array.isArray(table.rows)) {
+      throw new Error("Google gviz table is missing");
+    }
+
+    var headers = table.cols.map(function (col, idx) {
+      var label = col && (col.label || col.id);
+      return String(label || ("col" + idx)).trim();
+    });
+
+    var types = table.cols.map(function (col) {
+      return col && col.type ? String(col.type) : "";
+    });
+
+    return table.rows.map(function (row) {
+      var cells = (row && row.c) || [];
+      var obj = {};
+      headers.forEach(function (header, idx) {
+        var cell = cells[idx];
+        var value = "";
+        if (cell) {
+          if (types[idx] === "date" && cell.f) {
+            value = cell.f;
+          } else if (cell.v !== null && cell.v !== undefined) {
+            value = cell.v;
+          } else if (cell.f !== null && cell.f !== undefined) {
+            value = cell.f;
+          }
+        }
+        obj[header] = value === null || value === undefined ? "" : String(value);
+      });
+      return obj;
+    });
+  }
+
+  function fetchSheetRowsFromJson(url) {
+    return fetch(url, { cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok) {
+          throw new Error("Failed to load Google Sheet gviz JSON: " + res.status);
+        }
+        return res.text();
+      })
+      .then(parseGoogleVisualizationJson);
+  }
+
+  function fetchSheetRowsFromCsv(url) {
+    return fetch(url, { cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok) {
+          throw new Error("Failed to load Google Sheet CSV: " + res.status);
+        }
+        return res.text();
+      })
+      .then(parseCsvRows);
+  }
+
+  function parseCsvLine(line) {
+    var result = [];
+    var current = "";
+    var inQuotes = false;
+
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === "," && !inQuotes) {
+        result.push(current);
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+
+    result.push(current);
+    return result;
+  }
+
+  function parseCsvRows(csvText) {
+    var text = String(csvText || "").replace(/^\uFEFF/, "").trim();
+    if (!text) {
+      return [];
+    }
+
+    var lines = text.split(/\r?\n/).filter(function (line) {
+      return line.trim().length > 0;
+    });
+    if (!lines.length) {
+      return [];
+    }
+
+    var headers = parseCsvLine(lines[0]).map(function (h) {
+      return String(h || "").trim();
+    });
+
+    return lines.slice(1).map(function (line) {
+      var cols = parseCsvLine(line);
+      var row = {};
+
+      headers.forEach(function (header, idx) {
+        row[header] = (cols[idx] || "").trim();
+      });
+
+      return row;
+    });
+  }
+
+  function normalizeHeaderKey(key) {
+    return String(key || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
+  }
+
+  function normalizeRecordKeys(record) {
+    var normalized = {};
+    Object.keys(record || {}).forEach(function (key) {
+      normalized[normalizeHeaderKey(key)] = record[key];
+    });
+    return normalized;
+  }
+
+  function pickField(record, keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var v = record[normalizeHeaderKey(keys[i])];
+      if (v !== undefined && String(v).trim() !== "") {
+        return String(v).trim();
+      }
+    }
+    return "";
+  }
+
+  function parseOptionalNumber(value) {
+    if (value === null || value === undefined || value === "") {
+      return null;
+    }
+    var n = parseFloat(String(value).trim());
+    return isFinite(n) ? n : null;
+  }
+
+  function parseCapacityValue(value) {
+    var raw = String(value || "").trim();
+    if (!raw) {
+      return "unlimited";
+    }
+
+    var lowered = raw.toLowerCase();
+    if (lowered === "unlimited" || lowered === "无限" || lowered === "不限") {
+      return "unlimited";
+    }
+
+    var numeric = parseInt(raw, 10);
+    return isFinite(numeric) ? numeric : raw;
+  }
+
+  function looksLikeGpxReference(value) {
+    var raw = String(value || "").trim();
+    if (!raw) {
+      return false;
+    }
+
+    if (/^https?:\/\//i.test(raw)) {
+      return /\.gpx(\?|$)/i.test(raw) || /\/gpx\//i.test(raw);
+    }
+
+    return /\.gpx(\?|$)/i.test(raw);
+  }
+
+  function buildActivityFromRow(rawRow, index) {
+    var row = normalizeRecordKeys(rawRow);
+
+    var summaryEnValue = pickField(row, ["summaryEn", "descriptionEn", "descriptionEnglish"]);
+    var gpxValue = pickField(row, ["gpxFile", "gpx", "routeGpx"]);
+    var latValue = pickField(row, ["lat", "latitude"]);
+    var lngValue = pickField(row, ["lng", "lon", "longitude"]);
+    var overflowLngValue = pickField(row, ["s"]);
+
+    // Repair common shifted columns caused by commas in plain text cells.
+    if (gpxValue && !looksLikeGpxReference(gpxValue)) {
+      summaryEnValue = summaryEnValue ? (summaryEnValue + ", " + gpxValue) : gpxValue;
+      gpxValue = "";
+    }
+
+    if (latValue && !isFinite(parseFloat(latValue))) {
+      summaryEnValue = summaryEnValue ? (summaryEnValue + ", " + latValue) : latValue;
+      latValue = "";
+    }
+
+    if (!latValue && lngValue && overflowLngValue) {
+      var maybeLat = parseFloat(lngValue);
+      var maybeLng = parseFloat(overflowLngValue);
+      if (isFinite(maybeLat) && isFinite(maybeLng)) {
+        latValue = lngValue;
+        lngValue = overflowLngValue;
+      }
+    }
+
+    var activity = {
+      id: pickField(row, ["id"]) || ("activity-" + (index + 1)),
+      type: pickField(row, ["type"]) || "hiking",
+      status: pickField(row, ["status"]) || "future",
+      date: pickField(row, ["date"]),
+      difficulty: pickField(row, ["difficulty"]) || "moderate",
+      capacity: parseCapacityValue(pickField(row, ["capacity"])),
+      seatsLeft: parseOptionalNumber(pickField(row, ["seatsLeft", "seats"])),
+      distanceKm: parseOptionalNumber(pickField(row, ["distanceKm", "distance"])),
+      elevationGainM: parseOptionalNumber(pickField(row, ["elevationGainM", "elevation", "elevationGain"])),
+      locationZh: pickField(row, ["locationZh", "location"]),
+      locationEn: pickField(row, ["locationEn", "locationEnglish", "locationEnUs"]),
+      titleZh: pickField(row, ["titleZh", "title"]),
+      titleEn: pickField(row, ["titleEn", "titleEnglish", "titleEnUs"]),
+      summaryZh: pickField(row, ["summaryZh", "summary", "descriptionZh"]),
+      summaryEn: summaryEnValue,
+      gpxFile: gpxValue
+    };
+
+    var lat = parseOptionalNumber(latValue);
+    var lng = parseOptionalNumber(lngValue);
+    if (lat !== null && lng !== null) {
+      activity.lat = lat;
+      activity.lng = lng;
+    }
+
+    if (activity.locationEn === "") {
+      activity.locationEn = activity.locationZh;
+    }
+    if (activity.titleEn === "") {
+      activity.titleEn = activity.titleZh;
+    }
+    if (activity.summaryEn === "") {
+      activity.summaryEn = activity.summaryZh;
+    }
+
+    if (activity.seatsLeft === null) {
+      activity.seatsLeft = 0;
+    }
+    if (activity.distanceKm === null) {
+      activity.distanceKm = 0;
+    }
+    if (activity.elevationGainM === null) {
+      activity.elevationGainM = 0;
+    }
+
+    return activity;
+  }
+
+  function loadActivitiesFromGoogleSheet() {
+    var rawUrl = getActivitiesSheetCsvUrl();
+    if (!rawUrl) {
+      return Promise.reject(new Error("Google Sheet CSV URL is not configured"));
+    }
+
+    var urlInfo = parseSheetUrlInfo(rawUrl);
+    if (!urlInfo) {
+      return Promise.reject(new Error("Google Sheet URL is invalid"));
+    }
+
+    return fetchSheetRowsFromJson(urlInfo.jsonUrl)
+      .catch(function (jsonErr) {
+        console.warn("Google Sheet JSON load failed, trying CSV.", jsonErr);
+        return fetchSheetRowsFromCsv(urlInfo.csvUrl);
+      })
+      .then(function (rows) {
+        if (!rows.length) {
+          throw new Error("Google Sheet data is empty");
+        }
+        return rows.map(buildActivityFromRow).filter(function (a) {
+          return !!(a.date && a.titleZh && a.titleEn);
+        });
+      });
+  }
+
+  function loadActivitiesFromLocalJson() {
+    return fetch("files/activities.json", { cache: "no-store" })
       .then(function (res) {
         if (!res.ok) {
           throw new Error("Failed to load activities.json");
@@ -337,8 +684,21 @@
         return res.json();
       })
       .then(function (data) {
-        state.activities = (data.activities || []).map(function (a) {
-          a.month = String(a.date).slice(5, 7);
+        return (data.activities || []).map(function (a, idx) {
+          return buildActivityFromRow(a, idx);
+        });
+      });
+  }
+
+  function loadActivities() {
+    return loadActivitiesFromGoogleSheet()
+      .catch(function (sheetErr) {
+        console.warn("Google Sheet load failed, fallback to local JSON.", sheetErr);
+        return loadActivitiesFromLocalJson();
+      })
+      .then(function (activities) {
+        state.activities = activities.map(function (a) {
+          a.month = String(a.date || "").slice(5, 7);
           return a;
         });
       });
@@ -378,6 +738,22 @@
     return a.status === "future" ? t("未来活动", "Upcoming") : t("历史活动", "Past Event");
   }
 
+  function isAbsoluteUrl(path) {
+    return /^https?:\/\//i.test(path || "");
+  }
+
+  function resolveGpxUrl(activity) {
+    if (!activity || !activity.gpxFile) {
+      return "";
+    }
+
+    if (isAbsoluteUrl(activity.gpxFile)) {
+      return activity.gpxFile;
+    }
+
+    return "files/gpx/" + activity.gpxFile;
+  }
+
   function renderCards(items) {
     if (!items.length) {
       ui.cardsWrap.innerHTML = "<div class=\"panel\" style=\"padding:16px;\">" + t("暂无未来活动，敬请关注后续发布。", "No upcoming activities at the moment.") + "</div>";
@@ -393,6 +769,7 @@
       var location = state.lang === "zh" ? a.locationZh : a.locationEn;
       var hasPoint = !!getActivityCoordinate(a);
       var hasTrack = !!a.gpxFile;
+      var gpxUrl = resolveGpxUrl(a);
       var seatsText = a.seatsLeft > 0
         ? t("剩余席位", "Seats Left") + ": " + a.seatsLeft + "/" + a.capacity
         : t("席位已满", "Full") + " (" + a.capacity + ")";
@@ -420,7 +797,9 @@
         + "<button class=\"primary\" data-action=\"signup\" data-id=\"" + a.id + "\">" + t("报名", "Sign Up") + "</button>"
         + "<button data-action=\"focus\" data-id=\"" + a.id + "\">" + t("查看地图", "Focus Map") + "</button>"
         + (hasTrack
-            ? "<a href=\"files/gpx/" + a.gpxFile + "\" download>" + t("下载 GPX", "Download GPX") + "</a>"
+            ? (isAbsoluteUrl(gpxUrl)
+                ? "<a href=\"" + gpxUrl + "\" target=\"_blank\" rel=\"noopener noreferrer\">" + t("下载 GPX", "Download GPX") + "</a>"
+                : "<a href=\"" + gpxUrl + "\" download>" + t("下载 GPX", "Download GPX") + "</a>")
           : "<a href=\"#\" aria-disabled=\"true\">" + (hasPoint ? t("坐标点活动", "Point Activity") : t("轨迹整理中", "Route Pending")) + "</a>")
         + "</div>"
         + "</article>";
@@ -579,8 +958,9 @@
     }
 
     state.loadingRoutes[activity.id] = true;
+    var gpxUrl = resolveGpxUrl(activity);
 
-    fetch("files/gpx/" + activity.gpxFile, { cache: "no-store" })
+    fetch(gpxUrl, { cache: "no-store" })
       .then(function (res) {
         if (!res.ok) {
           throw new Error("Failed to load GPX: " + res.status);
@@ -869,25 +1249,40 @@
   }
 
   function getSignupErrorMessage(code) {
-    if (code === "mail_not_configured") {
-      return t("后台邮件配置缺失，请联系管理员。", "Mail service is not configured. Please contact admin.");
+    if (code === "signup_webapp_not_configured") {
+      return t("报名服务未配置，请联系管理员。", "Signup service is not configured. Please contact admin.");
+    }
+    if (code === "google_form_url_not_supported") {
+      return t("当前配置的是 Google Form 页面链接。请改为 Apps Script Web App 的 /exec 链接。", "Configured URL is a Google Form page. Please use an Apps Script Web App /exec URL instead.");
     }
     if (code === "missing_required_fields" || code === "invalid_payload") {
       return t("报名信息不完整，请检查后重试。", "Signup data is incomplete. Please check and retry.");
     }
-    if (code === "smtp_failed") {
-      return t("邮件发送失败，请稍后重试。", "Email sending failed. Please try again later.");
+    if (code === "server_error") {
+      return t("报名服务暂时异常，请稍后再试。", "Signup service error. Please try again later.");
+    }
+    if (code === "network_error") {
+      return t("网络异常，提交失败，请稍后重试。", "Network error. Submission failed, please retry.");
     }
     return t("提交失败，请稍后再试。", "Submission failed. Please try again later.");
   }
 
   function submitSignup(payload) {
+    var signupUrl = getSignupWebAppUrl();
+    if (!signupUrl) {
+      return Promise.resolve({ ok: false, code: "signup_webapp_not_configured" });
+    }
+
+    if (/docs\.google\.com\/forms\//i.test(signupUrl)) {
+      return Promise.resolve({ ok: false, code: "google_form_url_not_supported" });
+    }
+
     var formPayload = new URLSearchParams();
     Object.keys(payload).forEach(function (key) {
       formPayload.append(key, payload[key]);
     });
 
-    return fetch("api/signup.ashx", {
+    return fetch(signupUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
@@ -898,10 +1293,12 @@
         return { ok: false, code: "invalid_response" };
       }).then(function (data) {
         return {
-          ok: resp.ok && data.ok,
+          ok: !!data.ok,
           code: data.code || ""
         };
       });
+    }).catch(function () {
+      return { ok: false, code: "network_error" };
     });
   }
 
@@ -939,7 +1336,7 @@
             return;
           }
 
-          showToast(t("报名提交成功，我们会通过邮件处理您的信息。", "Signup submitted successfully. We will process it by email."));
+          showToast(t("报名提交成功，信息已记录。", "Signup submitted successfully. Your info has been recorded."));
           closeSignup();
         })
         .catch(function () {
