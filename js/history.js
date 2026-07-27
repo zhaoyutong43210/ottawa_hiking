@@ -145,8 +145,302 @@
     });
   }
 
-  function loadData() {
-    return fetch("files/history-activities.json")
+  function getHistorySheetCsvUrl() {
+    var meta = document.querySelector('meta[name="history-sheet-csv-url"]');
+    if (!meta) {
+      return "";
+    }
+    return (meta.getAttribute("content") || "").trim();
+  }
+
+  function parseSheetUrlInfo(rawUrl) {
+    var input = String(rawUrl || "").trim();
+    if (!input) {
+      return null;
+    }
+
+    var idMatch = input.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (!idMatch) {
+      return {
+        jsonUrl: input,
+        csvUrl: input
+      };
+    }
+
+    var sheetId = idMatch[1];
+    var gid = "";
+    var sheetName = "";
+
+    try {
+      var parsed = new URL(input);
+      gid = parsed.searchParams.get("gid") || "";
+      sheetName = parsed.searchParams.get("sheet") || "";
+      if (!gid && parsed.hash) {
+        var hashMatch = parsed.hash.match(/gid=(\d+)/);
+        gid = hashMatch ? hashMatch[1] : "";
+      }
+    } catch (e) {
+      gid = "";
+      sheetName = "";
+    }
+
+    var queryParts = ["tqx=out:json"];
+    var csvQueryParts = ["tqx=out:csv"];
+    if (gid) {
+      queryParts.push("gid=" + encodeURIComponent(gid));
+      csvQueryParts.push("gid=" + encodeURIComponent(gid));
+    }
+    if (sheetName) {
+      queryParts.push("sheet=" + encodeURIComponent(sheetName));
+      csvQueryParts.push("sheet=" + encodeURIComponent(sheetName));
+    }
+
+    return {
+      jsonUrl: "https://docs.google.com/spreadsheets/d/" + sheetId + "/gviz/tq?" + queryParts.join("&"),
+      csvUrl: "https://docs.google.com/spreadsheets/d/" + sheetId + "/gviz/tq?" + csvQueryParts.join("&")
+    };
+  }
+
+  function parseGoogleVisualizationJson(responseText) {
+    var text = String(responseText || "").trim();
+    var match = text.match(/google\.visualization\.Query\.setResponse\((.*)\);?$/s);
+    if (!match || !match[1]) {
+      throw new Error("Invalid Google gviz response");
+    }
+
+    var payload = JSON.parse(match[1]);
+    var table = payload && payload.table;
+    if (!table || !Array.isArray(table.cols) || !Array.isArray(table.rows)) {
+      throw new Error("Google gviz table is missing");
+    }
+
+    var headers = table.cols.map(function (col, idx) {
+      var label = col && (col.label || col.id);
+      return String(label || ("col" + idx)).trim();
+    });
+
+    var types = table.cols.map(function (col) {
+      return col && col.type ? String(col.type) : "";
+    });
+
+    return table.rows.map(function (row) {
+      var cells = (row && row.c) || [];
+      var obj = {};
+      headers.forEach(function (header, idx) {
+        var cell = cells[idx];
+        var value = "";
+        if (cell) {
+          if (types[idx] === "date" && cell.f) {
+            value = cell.f;
+          } else if (cell.v !== null && cell.v !== undefined) {
+            value = cell.v;
+          } else if (cell.f !== null && cell.f !== undefined) {
+            value = cell.f;
+          }
+        }
+        obj[header] = value === null || value === undefined ? "" : String(value);
+      });
+      return obj;
+    });
+  }
+
+  function parseCsvLine(line) {
+    var result = [];
+    var current = "";
+    var inQuotes = false;
+
+    for (var i = 0; i < line.length; i++) {
+      var ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (ch === "," && !inQuotes) {
+        result.push(current);
+        current = "";
+      } else {
+        current += ch;
+      }
+    }
+
+    result.push(current);
+    return result;
+  }
+
+  function parseCsvRows(csvText) {
+    var text = String(csvText || "").replace(/^\uFEFF/, "").trim();
+    if (!text) {
+      return [];
+    }
+
+    var lines = text.split(/\r?\n/).filter(function (line) {
+      return line.trim().length > 0;
+    });
+    if (!lines.length) {
+      return [];
+    }
+
+    var headers = parseCsvLine(lines[0]).map(function (h) {
+      return String(h || "").trim();
+    });
+
+    return lines.slice(1).map(function (line) {
+      var cols = parseCsvLine(line);
+      var row = {};
+
+      headers.forEach(function (header, idx) {
+        row[header] = (cols[idx] || "").trim();
+      });
+
+      return row;
+    });
+  }
+
+  function normalizeHeaderKey(key) {
+    return String(key || "").trim().toLowerCase().replace(/[\s_-]+/g, "");
+  }
+
+  function normalizeRecordKeys(record) {
+    var normalized = {};
+    Object.keys(record || {}).forEach(function (key) {
+      normalized[normalizeHeaderKey(key)] = record[key];
+    });
+    return normalized;
+  }
+
+  function pickField(record, keys) {
+    for (var i = 0; i < keys.length; i++) {
+      var v = record[normalizeHeaderKey(keys[i])];
+      if (v !== undefined && String(v).trim() !== "") {
+        return String(v).trim();
+      }
+    }
+    return "";
+  }
+
+  function parseOptionalNumber(value) {
+    if (value === null || value === undefined || value === "") {
+      return null;
+    }
+    var n = parseFloat(String(value).trim());
+    return isFinite(n) ? n : null;
+  }
+
+  function parseDetailLines(value) {
+    if (Array.isArray(value)) {
+      return value.map(function (item) {
+        return String(item || "").trim();
+      }).filter(function (item) {
+        return item.length > 0;
+      });
+    }
+
+    var text = String(value || "").trim();
+    if (!text) {
+      return [];
+    }
+
+    return text.split(/\|\||\r?\n/).map(function (item) {
+      return String(item || "").trim();
+    }).filter(function (item) {
+      return item.length > 0;
+    });
+  }
+
+  function buildHistoryActivity(rawRow, index) {
+    var row = normalizeRecordKeys(rawRow);
+    var detailZhRaw = rawRow && rawRow.detailZh !== undefined ? rawRow.detailZh : pickField(row, ["detailZh", "detailsZh"]);
+    var detailEnRaw = rawRow && rawRow.detailEn !== undefined ? rawRow.detailEn : pickField(row, ["detailEn", "detailsEn"]);
+
+    return {
+      id: pickField(row, ["id"]) || ("history-" + (index + 1)),
+      type: pickField(row, ["type"]) || "walking",
+      date: pickField(row, ["date"]),
+      difficulty: pickField(row, ["difficulty"]) || "moderate",
+      distanceKm: parseOptionalNumber(pickField(row, ["distanceKm", "distance"])) || 0,
+      elevationGainM: parseOptionalNumber(pickField(row, ["elevationGainM", "elevation", "elevationGain"])) || 0,
+      participants: parseOptionalNumber(pickField(row, ["participants", "participantCount"])) || 0,
+      locationZh: pickField(row, ["locationZh", "location"]),
+      locationEn: pickField(row, ["locationEn", "locationEnglish", "locationEnUs"]),
+      titleZh: pickField(row, ["titleZh", "title"]),
+      titleEn: pickField(row, ["titleEn", "titleEnglish", "titleEnUs"]),
+      summaryZh: pickField(row, ["summaryZh", "summary", "descriptionZh"]),
+      summaryEn: pickField(row, ["summaryEn", "descriptionEn", "descriptionEnglish"]),
+      detailZh: parseDetailLines(detailZhRaw),
+      detailEn: parseDetailLines(detailEnRaw),
+      gpxFile: pickField(row, ["gpxFile", "gpx", "routeGpx"])
+    };
+  }
+
+  function isAbsoluteUrl(path) {
+    return /^https?:\/\//i.test(path || "");
+  }
+
+  function resolveGpxUrl(activity) {
+    if (!activity || !activity.gpxFile) {
+      return "";
+    }
+
+    if (isAbsoluteUrl(activity.gpxFile)) {
+      return activity.gpxFile;
+    }
+
+    return "files/gpx/" + activity.gpxFile;
+  }
+
+  function fetchSheetRowsFromJson(url) {
+    return fetch(url, { cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok) {
+          throw new Error("Failed to load Google Sheet gviz JSON: " + res.status);
+        }
+        return res.text();
+      })
+      .then(parseGoogleVisualizationJson);
+  }
+
+  function fetchSheetRowsFromCsv(url) {
+    return fetch(url, { cache: "no-store" })
+      .then(function (res) {
+        if (!res.ok) {
+          throw new Error("Failed to load Google Sheet CSV: " + res.status);
+        }
+        return res.text();
+      })
+      .then(parseCsvRows);
+  }
+
+  function loadDataFromGoogleSheet() {
+    var rawUrl = getHistorySheetCsvUrl();
+    if (!rawUrl) {
+      return Promise.reject(new Error("History Google Sheet URL is not configured"));
+    }
+
+    var urlInfo = parseSheetUrlInfo(rawUrl);
+    if (!urlInfo) {
+      return Promise.reject(new Error("History Google Sheet URL is invalid"));
+    }
+
+    return fetchSheetRowsFromJson(urlInfo.jsonUrl)
+      .catch(function (jsonErr) {
+        console.warn("History sheet JSON load failed, trying CSV.", jsonErr);
+        return fetchSheetRowsFromCsv(urlInfo.csvUrl);
+      })
+      .then(function (rows) {
+        if (!rows.length) {
+          throw new Error("History sheet data is empty");
+        }
+        return rows.map(buildHistoryActivity).filter(function (a) {
+          return !!(a.date && a.titleZh && a.titleEn);
+        });
+      });
+  }
+
+  function loadDataFromLocalJson() {
+    return fetch("files/history-activities.json", { cache: "no-store" })
       .then(function (res) {
         if (!res.ok) {
           throw new Error("Failed to load history-activities.json");
@@ -154,7 +448,20 @@
         return res.json();
       })
       .then(function (data) {
-        state.activities = data.activities || [];
+        return (data.activities || []).map(function (item, idx) {
+          return buildHistoryActivity(item, idx);
+        });
+      });
+  }
+
+  function loadData() {
+    return loadDataFromGoogleSheet()
+      .catch(function (sheetErr) {
+        console.warn("History sheet load failed, fallback to local JSON.", sheetErr);
+        return loadDataFromLocalJson();
+      })
+      .then(function (items) {
+        state.activities = items;
       });
   }
 
@@ -188,7 +495,9 @@
         + "<div class=\"card-actions\">"
         + "<button class=\"primary\" data-action=\"focus\" data-id=\"" + a.id + "\">" + t("地图查看", "Show On Map") + "</button>"
         + (a.gpxFile
-          ? "<a href=\"files/gpx/" + a.gpxFile + "\" download>" + t("下载 GPX", "Download GPX") + "</a>"
+          ? (isAbsoluteUrl(resolveGpxUrl(a))
+            ? "<a href=\"" + resolveGpxUrl(a) + "\" target=\"_blank\" rel=\"noopener noreferrer\">" + t("下载 GPX", "Download GPX") + "</a>"
+            : "<a href=\"" + resolveGpxUrl(a) + "\" download>" + t("下载 GPX", "Download GPX") + "</a>")
           : "<a href=\"#\" aria-disabled=\"true\">" + t("无轨迹", "No GPX") + "</a>")
         + "</div>"
         + "</div>"
@@ -270,7 +579,7 @@
         return;
       }
 
-      var route = new L.GPX("files/gpx/" + a.gpxFile, {
+      var route = new L.GPX(resolveGpxUrl(a), {
         async: true,
         marker_options: {
           startIconUrl: "https://unpkg.com/leaflet-gpx@2.1.2/pin-icon-start.png",
