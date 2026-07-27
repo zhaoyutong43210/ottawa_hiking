@@ -15,6 +15,8 @@
     elevationControl: null
   };
 
+  var gpxViz = window.GpxVisualization || null;
+
   var difficultyStyles = {
     easy: { color: "#3cae61", weight: 4, opacity: 0.9 },
     moderate: { color: "#d6962c", weight: 4, opacity: 0.9 },
@@ -22,6 +24,7 @@
   };
 
   var mapReady = false;
+  var narrowScreenQuery = "(max-width: 1080px)";
 
   var friendlyOrganizations = [
     { zh: "校联龙舟队", en: "Campus Dragon Boat Team" },
@@ -754,6 +757,27 @@
     return "files/gpx/" + activity.gpxFile;
   }
 
+  function fetchGpxTextWithFallback(url) {
+    function fetchText(targetUrl) {
+      return fetch(targetUrl, { cache: "no-store" })
+        .then(function (res) {
+          if (!res.ok) {
+            throw new Error("Failed to load GPX: " + res.status);
+          }
+          return res.text();
+        });
+    }
+
+    return fetchText(url).catch(function (directErr) {
+      if (!isAbsoluteUrl(url)) {
+        throw directErr;
+      }
+
+      var proxyUrl = "https://cors.isomorphic-git.org/" + url;
+      return fetchText(proxyUrl);
+    });
+  }
+
   function renderCards(items) {
     if (!items.length) {
       ui.cardsWrap.innerHTML = "<div class=\"panel\" style=\"padding:16px;\">" + t("暂无未来活动，敬请关注后续发布。", "No upcoming activities at the moment.") + "</div>";
@@ -833,18 +857,24 @@
 
     state.markersLayer = L.layerGroup().addTo(state.map);
 
-    // Leaflet Elevation works best as a map control area. We keep one instance and clear data when switching routes.
-    state.elevationControl = L.control.elevation({
-      detached: true,
-      elevationDiv: "elevationChart",
-      theme: "steelblue-theme",
-      height: 150,
-      width: 520,
-      margins: { top: 10, right: 20, bottom: 30, left: 45 },
-      distanceMarkers: false,
-      summary: false,
-      followMarker: false
-    }).addTo(state.map);
+    if (gpxViz && gpxViz.createElevationControl) {
+      state.elevationControl = gpxViz.createElevationControl(state.map, {
+        elevationDiv: "elevationChart"
+      });
+    } else {
+      // Fallback path if shared helper fails to load.
+      state.elevationControl = L.control.elevation({
+        detached: true,
+        elevationDiv: "elevationChart",
+        theme: "steelblue-theme",
+        height: 150,
+        width: 520,
+        margins: { top: 10, right: 20, bottom: 30, left: 45 },
+        distanceMarkers: false,
+        summary: false,
+        followMarker: false
+      }).addTo(state.map);
+    }
 
     mapReady = true;
   }
@@ -960,36 +990,32 @@
     state.loadingRoutes[activity.id] = true;
     var gpxUrl = resolveGpxUrl(activity);
 
-    fetch(gpxUrl, { cache: "no-store" })
-      .then(function (res) {
-        if (!res.ok) {
-          throw new Error("Failed to load GPX: " + res.status);
-        }
-        return res.text();
-      })
+    fetchGpxTextWithFallback(gpxUrl)
       .then(function (xmlText) {
-        var doc = new window.DOMParser().parseFromString(xmlText, "application/xml");
-        var points = doc.getElementsByTagNameNS("*", "trkpt");
-        if (!points || !points.length) {
-          points = doc.getElementsByTagName("trkpt");
-        }
-        if (!points || !points.length) {
-          throw new Error("No trkpt found in GPX");
+        var latlngs = gpxViz && gpxViz.parseGpxTrackLatLngs
+          ? gpxViz.parseGpxTrackLatLngs(xmlText)
+          : [];
+
+        if (!latlngs.length) {
+          var doc = new window.DOMParser().parseFromString(xmlText, "application/xml");
+          var points = doc.getElementsByTagNameNS("*", "trkpt");
+          if (!points || !points.length) {
+            points = doc.getElementsByTagName("trkpt");
+          }
+          for (var i = 0; i < points.length; i++) {
+            var lat = parseFloat(points[i].getAttribute("lat"));
+            var lon = parseFloat(points[i].getAttribute("lon"));
+            var eleNode = points[i].getElementsByTagNameNS("*", "ele")[0] || points[i].getElementsByTagName("ele")[0];
+            var ele = eleNode ? parseFloat(eleNode.textContent) : 0;
+            if (!isFinite(ele)) {
+              ele = 0;
+            }
+            if (!isNaN(lat) && !isNaN(lon)) {
+              latlngs.push(L.latLng(lat, lon, ele));
+            }
+          }
         }
 
-        var latlngs = [];
-        for (var i = 0; i < points.length; i++) {
-          var lat = parseFloat(points[i].getAttribute("lat"));
-          var lon = parseFloat(points[i].getAttribute("lon"));
-          var eleNode = points[i].getElementsByTagNameNS("*", "ele")[0] || points[i].getElementsByTagName("ele")[0];
-          var ele = eleNode ? parseFloat(eleNode.textContent) : 0;
-          if (!isFinite(ele)) {
-            ele = 0;
-          }
-          if (!isNaN(lat) && !isNaN(lon)) {
-            latlngs.push(L.latLng(lat, lon, ele));
-          }
-        }
         if (!latlngs.length) {
           throw new Error("No valid coordinates in GPX");
         }
@@ -1025,6 +1051,11 @@
   }
 
   function updateElevationWithLayer(layer) {
+    if (gpxViz && gpxViz.addLayerToElevationControl) {
+      gpxViz.addLayerToElevationControl(state.elevationControl, layer);
+      return;
+    }
+
     if (!state.elevationControl || !layer || !layer.toGeoJSON) {
       return;
     }
@@ -1038,46 +1069,7 @@
       return;
     }
 
-    sanitizeGeoJSONElevation(geo);
-
     state.elevationControl.addData(geo);
-  }
-
-  function sanitizeGeoJSONElevation(geo) {
-    function visit(coords) {
-      if (!Array.isArray(coords) || !coords.length) {
-        return;
-      }
-
-      if (typeof coords[0] === "number" && typeof coords[1] === "number") {
-        if (!isFinite(coords[2])) {
-          coords[2] = 0;
-        }
-        return;
-      }
-
-      for (var i = 0; i < coords.length; i++) {
-        visit(coords[i]);
-      }
-    }
-
-    if (geo.type === "FeatureCollection" && Array.isArray(geo.features)) {
-      geo.features.forEach(function (f) {
-        if (f && f.geometry && f.geometry.coordinates) {
-          visit(f.geometry.coordinates);
-        }
-      });
-      return;
-    }
-
-    if (geo.type === "Feature" && geo.geometry && geo.geometry.coordinates) {
-      visit(geo.geometry.coordinates);
-      return;
-    }
-
-    if (geo.coordinates) {
-      visit(geo.coordinates);
-    }
   }
 
   function highlightRoute(activityId, keepMap) {
@@ -1165,21 +1157,25 @@
     if (state.routeLayers[activityId]) {
       highlightRoute(activityId, false);
       state.pendingFocusId = null;
+      scrollMapIntoViewOnNarrowScreen();
       return;
     }
 
     if (state.pointLayers[activityId]) {
       highlightRoute(activityId, false);
       state.pendingFocusId = null;
+      scrollMapIntoViewOnNarrowScreen();
       return;
     }
 
     if (hasGpx) {
       loadRoute(activity, true);
+      scrollMapIntoViewOnNarrowScreen();
     } else {
       loadPoint(activity);
       highlightRoute(activityId, false);
       state.pendingFocusId = null;
+      scrollMapIntoViewOnNarrowScreen();
     }
   }
 
@@ -1308,6 +1304,19 @@
     window.setTimeout(function () {
       ui.toast.classList.remove("show");
     }, 2200);
+  }
+
+  function scrollMapIntoViewOnNarrowScreen() {
+    if (!window.matchMedia || !window.matchMedia(narrowScreenQuery).matches) {
+      return;
+    }
+
+    var mapSection = document.getElementById("mapSection");
+    if (!mapSection || !mapSection.scrollIntoView) {
+      return;
+    }
+
+    mapSection.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function bindSignupEvents() {

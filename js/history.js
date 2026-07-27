@@ -7,9 +7,13 @@
     filteredActivities: [],
     map: null,
     routeLayers: {},
+    loadingRoutes: {},
     elevationControl: null,
     activeId: null
   };
+
+  var gpxViz = window.GpxVisualization || null;
+  var narrowScreenQuery = "(max-width: 1080px)";
 
   var styleByDifficulty = {
     easy: { color: "#3cae61", weight: 4, opacity: 0.9 },
@@ -52,6 +56,19 @@
     ui.toast.textContent = msg;
     ui.toast.classList.add("show");
     window.setTimeout(function () { ui.toast.classList.remove("show"); }, 2200);
+  }
+
+  function scrollMapIntoViewOnNarrowScreen() {
+    if (!window.matchMedia || !window.matchMedia(narrowScreenQuery).matches) {
+      return;
+    }
+
+    var mapPanel = document.getElementById("historyMapWrap");
+    if (!mapPanel || !mapPanel.scrollIntoView) {
+      return;
+    }
+
+    mapPanel.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   function updateStaticText() {
@@ -350,10 +367,53 @@
     });
   }
 
+  function extractUrlFromText(value) {
+    var text = String(value || "").trim();
+    if (!text) {
+      return "";
+    }
+
+    // Direct URL anywhere in the cell text.
+    var directMatch = text.match(/https?:\/\/[^\s"'<>]+/i);
+    if (directMatch && directMatch[0]) {
+      return directMatch[0].trim();
+    }
+
+    // Google Sheets formula style: =HYPERLINK("url","label")
+    var formulaMatch = text.match(/^=?\s*HYPERLINK\(\s*"([^"]+)"\s*,/i);
+    if (formulaMatch && formulaMatch[1]) {
+      return formulaMatch[1].trim();
+    }
+
+    // HTML anchor style: <a href="url">label</a>
+    var htmlMatch = text.match(/href\s*=\s*"([^"]+)"/i);
+    if (htmlMatch && htmlMatch[1]) {
+      return htmlMatch[1].trim();
+    }
+
+    return "";
+  }
+
+  function normalizeGpxField(value) {
+    var raw = String(value || "").trim();
+    if (!raw) {
+      return "";
+    }
+
+    var extractedUrl = extractUrlFromText(raw);
+    if (extractedUrl) {
+      return extractedUrl;
+    }
+
+    // Fallback to the raw value for local filenames like walk-wolftrail-2026-05.gpx
+    return raw;
+  }
+
   function buildHistoryActivity(rawRow, index) {
     var row = normalizeRecordKeys(rawRow);
     var detailZhRaw = rawRow && rawRow.detailZh !== undefined ? rawRow.detailZh : pickField(row, ["detailZh", "detailsZh"]);
     var detailEnRaw = rawRow && rawRow.detailEn !== undefined ? rawRow.detailEn : pickField(row, ["detailEn", "detailsEn"]);
+    var gpxRaw = pickField(row, ["gpxFile", "gpx", "routeGpx"]);
 
     return {
       id: pickField(row, ["id"]) || ("history-" + (index + 1)),
@@ -371,7 +431,7 @@
       summaryEn: pickField(row, ["summaryEn", "descriptionEn", "descriptionEnglish"]),
       detailZh: parseDetailLines(detailZhRaw),
       detailEn: parseDetailLines(detailEnRaw),
-      gpxFile: pickField(row, ["gpxFile", "gpx", "routeGpx"])
+      gpxFile: normalizeGpxField(gpxRaw)
     };
   }
 
@@ -389,6 +449,27 @@
     }
 
     return "files/gpx/" + activity.gpxFile;
+  }
+
+  function fetchGpxTextWithFallback(url) {
+    function fetchText(targetUrl) {
+      return fetch(targetUrl, { cache: "no-store" })
+        .then(function (res) {
+          if (!res.ok) {
+            throw new Error("Failed to load GPX: " + res.status);
+          }
+          return res.text();
+        });
+    }
+
+    return fetchText(url).catch(function (directErr) {
+      if (!isAbsoluteUrl(url)) {
+        throw directErr;
+      }
+
+      var proxyUrl = "https://cors.isomorphic-git.org/" + url;
+      return fetchText(proxyUrl);
+    });
   }
 
   function fetchSheetRowsFromJson(url) {
@@ -559,53 +640,99 @@
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(state.map);
 
-    state.elevationControl = L.control.elevation({
-      detached: true,
-      elevationDiv: "historyElevation",
-      theme: "steelblue-theme",
-      height: 150,
-      width: 520,
-      distanceMarkers: false,
-      summary: false,
-      followMarker: false
-    }).addTo(state.map);
+    if (gpxViz && gpxViz.createElevationControl) {
+      state.elevationControl = gpxViz.createElevationControl(state.map, {
+        elevationDiv: "historyElevation"
+      });
+    } else {
+      state.elevationControl = L.control.elevation({
+        detached: true,
+        elevationDiv: "historyElevation",
+        theme: "steelblue-theme",
+        height: 150,
+        width: 520,
+        margins: { top: 10, right: 20, bottom: 30, left: 45 },
+        distanceMarkers: false,
+        summary: false,
+        followMarker: false
+      }).addTo(state.map);
+    }
   }
 
   function loadRoutes() {
-    var loadedAny = false;
-
     state.activities.forEach(function (a) {
       if (!a.gpxFile) {
         return;
       }
-
-      var route = new L.GPX(resolveGpxUrl(a), {
-        async: true,
-        marker_options: {
-          startIconUrl: "https://unpkg.com/leaflet-gpx@2.1.2/pin-icon-start.png",
-          endIconUrl: "https://unpkg.com/leaflet-gpx@2.1.2/pin-icon-end.png",
-          shadowUrl: "https://unpkg.com/leaflet-gpx@2.1.2/pin-shadow.png"
-        },
-        polyline_options: [styleByDifficulty[a.difficulty] || styleByDifficulty.moderate]
-      });
-
-      route.on("loaded", function (evt) {
-        var layer = evt.target;
-        state.routeLayers[a.id] = layer;
-        bindPopup(a, layer);
-
-        if (!loadedAny) {
-          loadedAny = true;
-          state.map.fitBounds(layer.getBounds().pad(0.2));
-          state.activeId = a.id;
-          highlightCard(a.id);
-          updateElevation(layer);
-          emphasizeRoute(a.id, true);
-        }
-      });
-
-      route.addTo(state.map);
+      loadRoute(a);
     });
+  }
+
+  function parseGpxLatLngs(xmlText) {
+    if (gpxViz && gpxViz.parseGpxTrackLatLngs) {
+      return gpxViz.parseGpxTrackLatLngs(xmlText);
+    }
+
+    var doc = new window.DOMParser().parseFromString(String(xmlText || ""), "application/xml");
+    var points = doc.getElementsByTagNameNS("*", "trkpt");
+    if (!points || !points.length) {
+      points = doc.getElementsByTagName("trkpt");
+    }
+
+    var latlngs = [];
+    for (var i = 0; i < points.length; i++) {
+      var lat = parseFloat(points[i].getAttribute("lat"));
+      var lon = parseFloat(points[i].getAttribute("lon"));
+      var eleNode = points[i].getElementsByTagNameNS("*", "ele")[0] || points[i].getElementsByTagName("ele")[0];
+      var ele = eleNode ? parseFloat(eleNode.textContent) : 0;
+      if (!isFinite(ele)) {
+        ele = 0;
+      }
+      if (!isNaN(lat) && !isNaN(lon)) {
+        latlngs.push(L.latLng(lat, lon, ele));
+      }
+    }
+
+    return latlngs;
+  }
+
+  function loadRoute(activity) {
+    if (!activity || !activity.gpxFile) {
+      return;
+    }
+
+    if (state.routeLayers[activity.id] || state.loadingRoutes[activity.id]) {
+      return;
+    }
+
+    state.loadingRoutes[activity.id] = true;
+
+    fetchGpxTextWithFallback(resolveGpxUrl(activity))
+      .then(function (xmlText) {
+        var latlngs = parseGpxLatLngs(xmlText);
+        if (!latlngs.length) {
+          throw new Error("No valid coordinates in GPX");
+        }
+
+        var style = styleByDifficulty[activity.difficulty] || styleByDifficulty.moderate;
+        var layer = L.polyline(latlngs, style).addTo(state.map);
+        state.routeLayers[activity.id] = layer;
+        bindPopup(activity, layer);
+
+        if (!state.activeId) {
+          state.map.fitBounds(layer.getBounds().pad(0.2));
+          state.activeId = activity.id;
+          highlightCard(activity.id);
+          updateElevation(layer);
+          emphasizeRoute(activity.id, true);
+        }
+      })
+      .catch(function (err) {
+        console.error("History GPX load failed", activity.id, err);
+      })
+      .finally(function () {
+        delete state.loadingRoutes[activity.id];
+      });
   }
 
   function bindPopup(activity, layer) {
@@ -625,6 +752,11 @@
   }
 
   function updateElevation(layer) {
+    if (gpxViz && gpxViz.addLayerToElevationControl) {
+      gpxViz.addLayerToElevationControl(state.elevationControl, layer);
+      return;
+    }
+
     if (!state.elevationControl || !layer || !layer.toGeoJSON) {
       return;
     }
@@ -673,6 +805,7 @@
       return;
     }
     emphasizeRoute(id, false);
+    scrollMapIntoViewOnNarrowScreen();
   }
 
   function start() {
